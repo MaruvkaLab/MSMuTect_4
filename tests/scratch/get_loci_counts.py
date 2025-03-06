@@ -41,10 +41,10 @@ def get_loci_counts_per_motif_size(fp: str, out_dir: str, old: bool) -> PerMotif
 
 def main():
     res_hist = get_loci_counts_per_motif_size("/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/res_low_purity.full.mut.tsv",
-                                              "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/new_results2", old=False)
+                                              "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/new_results3", old=False)
     # res_hist = get_loci_counts_per_motif_size(
     #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/TCGA-BR-4201.full.mut.tsv",
-    #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/orig_results", old=True)
+    #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/tmp", old=True)
     print(res_hist)
 
 if __name__ == '__main__':

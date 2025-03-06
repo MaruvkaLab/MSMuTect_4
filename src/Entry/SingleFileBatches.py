@@ -77,9 +77,9 @@ def partial_single_histogram(loci: List[Locus], BAM: str, flanking: int, results
 if __name__ == '__main__':
     # run_single_histogram(BAM: str, loci_file: str, batch_start: int,
     #                          batch_end: int, cores: int, flanking: int, output_prefix: str) -> None:
-    run_single_histogram("/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/multimapping_loci.bam",
-                         "/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/fake_sample_locus_sorted.tsv",
-                         0, 10, 1, 10, False, "croc_tmp")
+    run_single_histogram("/home/avraham/MaruvkaLab/Texas/gdc/fc8376df-e7c3-42e9-b7b3-3413c3493874/02ca2f53-bd02-4e48-98be-aa09e69299ac_wgs_gdc_realn.bam",
+                         "/home/avraham/MaruvkaLab/Texas/strict_msmutect/prob_locus.tmp",
+                         0, 1, 1, 10, "/home/avraham/MaruvkaLab/Texas/strict_msmutect/tmp")
     #
     # run_single_allelic(
     #     "/home/avraham/MaruvkaLab/msmutect_runs/problems/integer_wierd_rounding/prob_locus.bam",

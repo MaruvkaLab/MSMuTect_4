@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 from collections import defaultdict
 
 from pysam import AlignedSegment
+from scipy.special.cython_special import binom
 
 from src.Entry.FormatUtil import format_list
 from src.GenomicUtils.CigarOptions import CIGAR_OPTIONS
@@ -11,6 +12,26 @@ from src.GenomicUtils.Mutation import Mutation
 from src.GenomicUtils.reference_locus_comparer import extract_locus_mutations, microsatellite_indel
 from src.IndelCalling.Locus import Locus
 
+#
+# def static_vars(**kwargs): # thanks to stackoverflow John Kugelman
+#     def decorate(func):
+#         for k in kwargs:
+#             setattr(func, k, kwargs[k])
+#         return func
+#     return decorate
+#
+# def return_minus_2():
+#     return -1
+#
+#
+# @static_vars(cache=defaultdict(float))
+# def binom_cdf(n: int, k: int) -> float:
+#
+#     ret = binom_cdf.cache[]
+#     if not in :
+#         pass
+#     else:
+#         retur
 
 class Histogram:
     def __init__(self, locus: Locus):
@@ -31,11 +52,13 @@ class Histogram:
         return has_snp, has_indel
 
     def add_read_to_repeat_length_dict(self, read: AlignedSegment) -> int:
-        mutations = extract_locus_mutations(read, self.locus.start, self.locus.end)
+        mutations = extract_locus_mutations(read, self.locus.start, self.locus.end, len(self.locus.pattern))
         # if mutations[0].insertion:
         #     croc=1
         # print(mutations)
         has_snp, has_indel = self.mutation_types(mutations)
+        if has_snp:
+            croc=1
         current_repeat_length = 0
         if has_snp:
             for m in mutations:
@@ -63,7 +86,7 @@ class Histogram:
         if len(self.noise_dict)==0: # no noise dict entries
             return False
         else:
-            return max(self.noise_dict.values()) >= 5
+            return max(self.noise_dict.values()) >= (max(5, sum(self.repeat_lengths.values())*0.3)) # should realy be replaced with binomial... problem is I'm not sure how to define the problem with mutation in founding cell of tumor
 
     def is_noisy(self):
         if self._noisiness is None:
@@ -99,3 +122,5 @@ class Histogram:
                 return False
         return len(self.repeat_lengths.keys()) == len(self.repeat_lengths.keys())
 
+if __name__ == '__main__':
+    print(Histogram.header())

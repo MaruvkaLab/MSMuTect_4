@@ -1,245 +1,21 @@
-import re
-import shutil, os
-from dataclasses import dataclass
-from typing import List
-from collections import namedtuple
 
-from Cython.Compiler.Naming import cython_runtime_cname
 
+from tests.testing_utils.sam_utils import FakeRead, create_new_bam
+from tests.testing_utils.sample_sequences import seq_tri_repeat_full_purity
 from tests.testing_utils.self_contained_utils import sample_bams_path, header_only_sam
 
 # FakeRead = namedtuple("FakeRead", field_names=["read_start", "cigar_str"])
-@dataclass
-class FakeRead:
-    read_start: int
-    cigar_str: str
-    sequence: str = None
-    subsitutions: List[str] = None
 
 
-def old():
-    rl = create_readline(fake_reads=[
-        FakeRead(9_954, "101M"),
-        FakeRead(9_964, "101M"),
-        FakeRead(10_035, "101M"),
-        FakeRead(10_036, "101M"),
-    ])
-    add_to_end_of_file("/home/avraham/MaruvkaLab/msmutect_runs/data/fake/map.sam", rl)
 
 
-def create_readline_custom_length(fake_reads: List[FakeRead], custom_length: int):
-    if len(fake_reads) == 0:
-        return
-
-    seq = 'A' * custom_length
-    # based on real TCGA case, but fields obscured and changed
-    fields = ["FAKE",  # name
-              '2', # bitwise flags. 2 indicates aligned properly
-              '1', # chromosome
-              '10051',  # start
-              '4',  # mapping quality
-              '101M',  # cigar
-              '=', # reference name of next read
-              '44444', # position of next read
-              '108', # template length
-              seq,
-              seq,
-              'X0:i:100',
-              'MD:Z:79A22',
-              'RG:Z:0.3',
-              'XG:i:0',
-              'AM:i:0',
-              'NM:i:1',
-              'SM:i:0',
-              'XM:i:1',
-              'XO:i:0',
-              'MQ:i:0',
-              'OQ:Z:C@SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS?A=A;ABB((,:9<??BBB@D9<A?B99AB',
-              "XT:A:R"]
 
 
-    all_new_reads = []
-    for fr in fake_reads:
-        new_read = fields.copy()
-        new_read[3] = str(fr.read_start)
-        new_read[5] = fr.cigar_str
-        all_new_reads.append(new_read)
-    return "\n".join(["\t".join(a) for a in all_new_reads])
-
-def write_seq(start, cigar_str: str, subsitutions: List[str], base: str):
-    if start < 9975 or start > 10_050:
-        raise RuntimeError
-    op_lens = [int(op_len) for op_len in re.split("[MXID]", cigar_str)[:-1]]
-    ops = [char for char in cigar_str if char in ["M", "D", "I", "X"]]
-    current_pos = start-9975
-    segments = []
-    if subsitutions is None:
-        subsitutions = []
-    subsitutions = subsitutions.copy()
-    sub_idx=0
-    for op, op_len  in zip(ops, op_lens):
-        if op == 'M':
-            segments.append(base[current_pos:current_pos+op_len])
-            current_pos+=op_len
-        elif op == 'X':
-            if subsitutions[sub_idx] == "N": # correct if user doesnt bother setting
-                if base[current_pos]=="G":
-                    subsitutions[sub_idx] = "T"
-                else:
-                    subsitutions[sub_idx] = "G"
-            assert op_len==1
-            assert subsitutions[sub_idx]!=base[current_pos]
-            segments.append(subsitutions[sub_idx])
-            sub_idx+=1
-            current_pos+=1
-        elif op=='D':
-            subsitutions.insert(0, base[current_pos:current_pos+op_len])
-            current_pos+=op_len
-        else: # I
-            segments.append(subsitutions[sub_idx])
-            sub_idx+=1
-    return "".join(segments), subsitutions
-
-def create_seq(start, cigar_str: str, subsitutions: List[str]):
-    # croc = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACACACAAAAACGACGACGACGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    base = "TTTTTTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACACACACACAAAAACGACGACGACGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
-    return write_seq(start, cigar_str, subsitutions, base)
-
-def create_seq_high_entrophy(start, cigar_str: str, subsitutions: List[str]):
-    # croc = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACACACAAAAACGACGACGACGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    base = "CCACGAAGCGTCCCGCCCAGGACGCGAGCATGGTCTTGGTTCGAGCCATTCGCGGGTCTGGTCGTACGTCTCCGAGGTTATCCTCGCGCTCCTACCGTTGTTTAACGCCCGATCTTTGCGGTCTGTGTTTGGAGACACAACAATCTTAAGCCACGAAGCGTCCCGCCCAGGACGCGAGCATGGTCTTGGTTCGAGCCATTCGCGGGTCTGGTCGTACGTCTCCGAGGTTATCCTCGCGCTCCTACCGTTGTTTAACGCCCGATCTTTGCGGTCTGTGTTTGGAGACACAACAATCTTAAG"
-    return write_seq(start, cigar_str, subsitutions, base)
-
-def create_seq_mono_repeat_wone_impurity(start, cigar_str: str, subsitutions: List[str]):
-    base = "CCACGAAGCGTCCCGCCCAGGACGC"+"A"*30+"C"+"A"*29+"CCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGC"
-    return write_seq(start, cigar_str, subsitutions, base)
-
-def create_seq_tri_repeat_full_purity(start, cigar_str: str, subsitutions: List[str]):
-    base = "CCACGAAGCGTCCCGCCCAGGACGC"+"ACT"*4+"CCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGCCCACGAAGCGTCCCGCCCAGGACGC"
-    return write_seq(start, cigar_str, subsitutions, base)
-
-
-def split_cigar(cigar: str):
-    type_idxs = []
-    for i, c in enumerate(cigar):
-        if c.isalpha():
-            type_idxs.append(i)
-    last_idx = 0
-    ret = []
-    for t in type_idxs:
-        ret.append(cigar[last_idx:t+1])
-        last_idx=t+1
-    return ret
-
-def create_MD_string(read: FakeRead, subsitutions: List[str]):
-    cigar_split = split_cigar(read.cigar_str)
-    ret = []
-    sub_idx = 0
-    current_match = 0
-    for cig in cigar_split:
-        if cig[-1]=="M":
-            current_match+=int(cig[:-1])
-            continue
-        else:
-            if current_match!=0:
-                ret.append(str(current_match))
-            current_match=0
-
-        if cig[-1]=="X":
-            ret.append(subsitutions[sub_idx])
-            sub_idx+=1
-        elif cig[-1] == "D":
-            ret.append(f"^{subsitutions[sub_idx]}")
-            sub_idx+=1
-
-    if current_match!=0:
-        ret.append(str(current_match))
-    return "MD:Z:"+"".join(ret)
-        # ret.append()
-
-
-def create_readline(fake_reads: List[FakeRead], create_seq_func=create_seq):
-    if len(fake_reads) == 0:
-        return
-
-    # based on real TCGA case, but fields obscured and changed
-    fields = ["FAKE",  # name
-              '2', # bitwise flags. 2 indicates aligned properly
-              '1', # chromosome
-              '10051',  # start
-              '4',  # mapping quality
-              '101M',  # cigar
-              '=', # reference name of next read
-              '44444', # position of next read
-              '108', # template length
-              'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-              'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-              'X0:i:100',
-              'MD:Z:79A22',
-              'RG:Z:0.3',
-              'XG:i:0',
-              'AM:i:0',
-              'NM:i:1',
-              'SM:i:0',
-              'XM:i:1',
-              'XO:i:0',
-              'MQ:i:0',
-              'OQ:Z:C@SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS?A=A;ABB((,:9<??BBB@D9<A?B99AB',
-              "XT:A:R"]
-
-
-    all_new_reads = []
-    for fr in fake_reads:
-        new_read = fields.copy()
-        new_read[3] = str(fr.read_start)
-        new_read[5] = fr.cigar_str
-        if fr.sequence is not None:
-            new_read[9] = fr.sequence
-            new_read[10] = fr.sequence
-        else:
-            new_read[9], updated_subsitutions = create_seq_func(fr.read_start, fr.cigar_str, fr.subsitutions)
-            new_read[10], _ = create_seq_func(fr.read_start, fr.cigar_str, fr.subsitutions)
-
-        new_read[12] = create_MD_string(fr, updated_subsitutions)
-
-        all_new_reads.append(new_read)
-    return "\n".join(["\t".join(a) for a in all_new_reads])
-
-
-def add_to_end_of_file(fp: str, lines: str):
-    with open(fp, 'a') as sam:
-        sam.write(lines)
-
-
-def create_new_bam_custom_length(new_name: str, fake_reads: List[FakeRead], custom_length: int):
-    header_only_file = header_only_sam()
-    new_filename = os.path.join(sample_bams_path(), new_name + ".sam")
-    shutil.copyfile(header_only_file, new_filename)
-    readlines = create_readline_custom_length(fake_reads, custom_length)
-    add_to_end_of_file(new_filename, readlines)
-    bam_filename = new_filename[:-4]+".bam"
-    os.system(f"samtools view -b -h {new_filename} > {bam_filename}")
-    os.system(f"samtools index {bam_filename}")
-
-
-def create_new_bam(new_name: str, fake_reads: List[FakeRead], create_seq_func = create_seq):
-    header_only_file = header_only_sam()
-    new_filename = os.path.join(sample_bams_path(), new_name + ".sam")
-    shutil.copyfile(header_only_file, new_filename)
-    readlines = create_readline(fake_reads, create_seq_func)
-    add_to_end_of_file(new_filename, readlines)
-    bam_filename = new_filename[:-4]+".bam"
-    os.system(f"samtools view -b -h {new_filename} > {bam_filename}")
-    os.system(f"samtools index {bam_filename}")
 
 
 
 
 def main():
-    print(create_seq(10_025, '101M', [])[:10])
-    # for realistic loci, 25-51 is ACACACACACAAAAACGACGACGACGA
-    # base="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACACACACACAAAAACGACGACGACGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-
 
     snp_read = [FakeRead(9985, "15M1X6D85M", subsitutions=["N"]) for i in range(5)]
     create_new_bam("strict_test_1", [
@@ -249,22 +25,22 @@ def main():
         FakeRead(9985, "16M3I83M", subsitutions=["CAT"]),
         FakeRead(9985, "16M6D85M"),
 
-    ]+snp_read, create_seq_func=create_seq_tri_repeat_full_purity)
+    ]+snp_read, base_seq=seq_tri_repeat_full_purity())
 
 
-    create_new_bam("strict_test_2", [
-        # these reads wont count for various reasons listed in the reads table
-        FakeRead(9985, "14M3D87M"),
-        FakeRead(9985, "70M15D31M"),
-        FakeRead(9985, "13M90D88M"),
-        FakeRead(9985, "12M1X88M", subsitutions=["N"]),
-        FakeRead(9985, "40M10D71M"),
-        FakeRead(9985, "40M5I71M", subsitutions=["AAAGA"]),
-
-        # these reads will count. see reads table
-        FakeRead(9985, "90M1X10M", subsitutions=["N"]),
-        FakeRead(9985, "72M2D29M", subsitutions=["N"])
-    ], create_seq_func=create_seq_mono_repeat_wone_impurity)
+    # create_new_bam("strict_test_2", [
+    #     # these reads wont count for various reasons listed in the reads table
+    #     FakeRead(9985, "14M3D87M"),
+    #     FakeRead(9985, "70M15D31M"),
+    #     FakeRead(9985, "13M90D88M"),
+    #     FakeRead(9985, "12M1X88M", subsitutions=["N"]),
+    #     FakeRead(9985, "40M10D71M"),
+    #     FakeRead(9985, "40M5I71M", subsitutions=["AAAGA"]),
+    #
+    #     # these reads will count. see reads table
+    #     FakeRead(9985, "90M1X10M", subsitutions=["N"]),
+    #     FakeRead(9985, "72M2D29M", subsitutions=["N"])
+    # ], create_seq_func=create_seq_mono_repeat_wone_impurity)
 
 
 

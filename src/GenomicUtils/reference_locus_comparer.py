@@ -72,7 +72,7 @@ def find_md_subsitutions_and_deletions(read: AlignedSegment, locus_start: int, l
         elif op.op == MD_OP.SUBSITUTION:
             if locus_start <= current_read_position <= locus_end or abs(locus_start - current_read_position) <= snp_padding or abs(
                     current_read_position - locus_end) <= snp_padding:
-                ret.append(Mutation(op.seq, substitution=True, enters_or_exits_locus=False))
+                ret.append(Mutation(op.seq, substitution=True, enters_or_exits_locus=False, position=current_read_position))
             current_read_position+=op.length # will always be 1
         elif op.op == MD_OP.DELETION:
             if locus_start <= current_read_position <= locus_end:

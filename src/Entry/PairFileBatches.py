@@ -167,9 +167,11 @@ def run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: in
 
 
 if __name__ == '__main__':
-    run_from_file("/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/098698a0-3107-49e3-9226-d6d105f195a1.hist.tsv",
-                  "/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/009dcaf2-f6bb-415e-b088-6e852853b1a2.hist.tsv",
-                  44_347, 44_348, 5, True, "/home/avraham/MaruvkaLab/Texas/efficient_run/o151")
+    print(  f"{Locus.header()}\t{Histogram.header(prefix='NORMAL_')}\t{AlleleSet.header(prefix='NORMAL_')}\t{Histogram.header(prefix='TUMOR_')}\t{AlleleSet.header(prefix='TUMOR_')}\t{MutationCall.header()}")
+# )
+#     run_mutations_pair("/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/098698a0-3107-49e3-9226-d6d105f195a1.hist.tsv",
+#                   "/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/009dcaf2-f6bb-415e-b088-6e852853b1a2.hist.tsv",
+#                   44_347, 44_348, 5, True, "/home/avraham/MaruvkaLab/Texas/strict_msmutect/tmp")
     # run_from_file("/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/098698a0-3107-49e3-9226-d6d105f195a1.hist.tsv",
     #               "/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/009dcaf2-f6bb-415e-b088-6e852853b1a2.hist.tsv",
     #               16697, 16698, 5, True, "/home/avraham/MaruvkaLab/Texas/efficient_run/o16b")
