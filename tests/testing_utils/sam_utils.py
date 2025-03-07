@@ -12,7 +12,7 @@ class FakeRead:
     read_start: int
     cigar_str: str
     sequence: str = None
-    subsitutions: List[str] = None
+    insertions_snps: List[str] = None
 
 def split_cigar(cigar: str):
     type_idxs = []
@@ -26,9 +26,15 @@ def split_cigar(cigar: str):
         last_idx=t+1
     return ret
 
-def create_MD_string(read: FakeRead, subsitutions: List[str]):
+def create_MD_string(read: FakeRead, modifications: List[str]) -> str:
+    """
+    Creates MD string based on FakeRead and substitutions
+    :param read: has cigar info, sequence, etc.
+    :param modifications: Includes deletions!
+    :return: the md string
+    """
     cigar_split = split_cigar(read.cigar_str)
-    ret = []
+    ops = []
     sub_idx = 0
     current_match = 0
     for cig in cigar_split:
@@ -37,26 +43,33 @@ def create_MD_string(read: FakeRead, subsitutions: List[str]):
             continue
         else:
             if current_match!=0:
-                ret.append(str(current_match))
+                ops.append(current_match)
             current_match=0
 
         if cig[-1]=="X":
-            ret.append(subsitutions[sub_idx])
+            ops.append(modifications[sub_idx])
             sub_idx+=1
         elif cig[-1] == "D":
-            ret.append(f"^{subsitutions[sub_idx]}")
+            ops.append(f"^{modifications[sub_idx]}")
             sub_idx+=1
 
     if current_match!=0:
-        ret.append(str(current_match))
+        ops.append(str(current_match))
+    ret = [ops[0]]
+    for i in range(1,len(ops)): # combine matches in case of MATCH-INSERTION-MATCH. Not the cleanest code
+        if type(ret[-1]) == int and type(ops[i])==int:
+            ret[-1]+=ops[i]
+        else:
+            ret.append(ops[i])
+    ret = [str(r) for r in ret]
     return "MD:Z:"+"".join(ret)
 
-def write_seq(read_start: int, cigar_str: str, substitutions: List[str], base_sequence: str, base_sequence_position=9975) -> Tuple[str, List[str]]:
+def write_seq(read_start: int, cigar_str: str, insertions_snps: List[str], base_sequence: str, base_sequence_position=9975) -> Tuple[str, List[str]]:
     """
     returns properly formatted DNA sequence with given mutations (substitutions, indels)
     :param read_start: read start position (absolute)
     :param cigar_str: CIGAR string of read
-    :param substitutions: insertions+substitutions sequence
+    :param insertions_snps: insertions+substitutions sequences
     :param base_sequence: the base sequence to use
     :param base_sequence_position: the absolute posititon of the base sequence
     :return: (sequence, substitutions)
@@ -67,32 +80,32 @@ def write_seq(read_start: int, cigar_str: str, substitutions: List[str], base_se
     ops = [char for char in cigar_str if char in ["M", "D", "I", "X"]]
     current_pos = read_start-base_sequence_position
     segments = []
-    if substitutions is None:
-        substitutions = []
-    substitutions = substitutions.copy()
+    if insertions_snps is None:
+        insertions_snps = []
+    modified_substitutions = insertions_snps.copy()
     sub_idx=0
     for op, op_len  in zip(ops, op_lens):
         if op == 'M':
             segments.append(base_sequence[current_pos:current_pos+op_len])
             current_pos+=op_len
         elif op == 'X':
-            if substitutions[sub_idx] == "N": # correct if user doesnt bother setting
+            if insertions_snps[sub_idx] == "N": # correct if user doesn't bother setting
                 if base_sequence[current_pos]=="G":
-                    substitutions[sub_idx] = "T"
+                    modified_substitutions[sub_idx] = "T"
                 else:
-                    substitutions[sub_idx] = "G"
+                    modified_substitutions[sub_idx] = "G"
             assert op_len==1
-            assert substitutions[sub_idx] != base_sequence[current_pos]
-            segments.append(substitutions[sub_idx])
+            assert insertions_snps[sub_idx] != base_sequence[current_pos]
+            segments.append(insertions_snps[sub_idx])
             sub_idx+=1
             current_pos+=1
         elif op=='D':
-            substitutions.insert(0, base_sequence[current_pos:current_pos + op_len])
+            modified_substitutions.append(base_sequence[current_pos:current_pos + op_len])
             current_pos+=op_len
         else: # I
-            segments.append(substitutions[sub_idx])
+            segments.append(insertions_snps[sub_idx])
             sub_idx+=1
-    return "".join(segments), substitutions
+    return "".join(segments), modified_substitutions
 
 
 def add_to_end_of_file(fp: str, lines: str):
@@ -143,8 +156,8 @@ def create_readline(fake_reads: List[FakeRead], base_seq=None, base_seq_position
             new_read[9] = fr.sequence
             new_read[10] = fr.sequence
         else:
-            new_read[9], updated_subsitutions = write_seq(fr.read_start, fr.cigar_str, fr.subsitutions, base_seq, base_seq_position)
-            new_read[10], _ = write_seq(fr.read_start, fr.cigar_str, fr.subsitutions, base_seq, base_seq_position)
+            new_read[9], updated_subsitutions = write_seq(fr.read_start, fr.cigar_str, fr.insertions_snps, base_seq, base_seq_position)
+            new_read[10], _ = write_seq(fr.read_start, fr.cigar_str, fr.insertions_snps, base_seq, base_seq_position)
 
         new_read[12] = create_MD_string(fr, updated_subsitutions)
 

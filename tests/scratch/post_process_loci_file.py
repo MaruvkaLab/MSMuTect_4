@@ -24,6 +24,8 @@ def similarity(a: str, b: str):
     return Levenshtein.ratio(a, b)
 
 def select_best_pattern(sequence: str, pattern: str) -> str:
+    if pattern=="AGC":
+        croc=1
     forward_pattern_seq = extrapolate_pattern(pattern , len(sequence))
     reverse_pattern_seq = reverse_complement(forward_pattern_seq)
     if sequence == reverse_pattern_seq:
@@ -39,7 +41,7 @@ def select_best_pattern(sequence: str, pattern: str) -> str:
         if forward_similarity > reverse_similarity:
             return pattern
         else:
-            return pattern
+            return reverse_complement(pattern)
 
 def create_new_loci_file(input_fp: str, output_fp: str):
     with open(input_fp, 'r') as input_loci:
@@ -56,5 +58,5 @@ def create_new_loci_file(input_fp: str, output_fp: str):
 if __name__ == '__main__':
     # print(reverse_complement("ACGGGT"))
     # print(extrapolate_pattern("ACTG", 9))
-    create_new_loci_file("/home/avraham/MaruvkaLab/Texas/texas_stad_run/hg38_1to15_all_perf_sorted",
-                         "/home/avraham/MaruvkaLab/Texas/texas_stad_run/hg38_1to15_all_perf_sorted_rc_corrected")
+    create_new_loci_file("/home/avraham/MaruvkaLab/Texas/SNVs/slimeball/data/hg38_1to15_all_perf_sorted.phobos",
+                         "/home/avraham/MaruvkaLab/msmutect_runs/hg38_all_rc_corrected")

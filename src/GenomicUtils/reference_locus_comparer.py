@@ -96,7 +96,7 @@ def find_md_subsitutions_and_deletions(read: AlignedSegment, locus_start: int, l
     return ret
 
 
-def extract_locus_mutations(read: AlignedSegment, locus_start: int, locus_end: int, snp_padding: int = 15) -> List[Mutation]:
+def extract_locus_mutations(read: AlignedSegment, locus_start: int, locus_end: int, snp_padding: int) -> List[Mutation]:
     # default is 15 since that is the longest motif length we consider
 
     # returns all indels WITHIN locus, and all snps within snp_padding bases of locus

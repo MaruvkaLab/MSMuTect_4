@@ -29,14 +29,14 @@ class TestCalcAlleles(unittest.TestCase):
 
 
 
-        # alleles_6 = calculate_alleles(histograms[5], noise_table=noise_table)
-        # self.assertEqual(int(alleles_6.log_likelihood), -67)
-        # alleles_5 = calculate_alleles(histograms[4], noise_table)
-        # print(alleles_5)
-        # print(alleles_5.frequencies)
-        # print(histograms[4])
-        # self.assertEqual(len(alleles_5.repeat_lengths), 1)
-        # alleles_7 = calculate_alleles(histograms[6], noise_table)
+        alleles_6 = calculate_alleles(histograms[5], noise_table, 5)
+        self.assertEqual(int(alleles_6.log_likelihood), -67)
+        alleles_5 = calculate_alleles(histograms[4], noise_table, 5)
+        print(alleles_5)
+        print(alleles_5.frequencies)
+        print(histograms[4])
+        self.assertEqual(len(alleles_5.repeat_lengths), 1)
+        # alleles_7 = calculate_alleles(histograms[6], noise_table, 5)
         # sorted_freqs = sorted(alleles_7.frequencies)
         # print(sorted_freqs)
         # self.assertTrue(abs(sorted_freqs[1] - 0.230181 ) < .01)

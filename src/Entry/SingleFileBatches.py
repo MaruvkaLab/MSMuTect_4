@@ -77,10 +77,14 @@ def partial_single_histogram(loci: List[Locus], BAM: str, flanking: int, results
 if __name__ == '__main__':
     # run_single_histogram(BAM: str, loci_file: str, batch_start: int,
     #                          batch_end: int, cores: int, flanking: int, output_prefix: str) -> None:
-    run_single_histogram("/home/avraham/MaruvkaLab/Texas/gdc/fc8376df-e7c3-42e9-b7b3-3413c3493874/02ca2f53-bd02-4e48-98be-aa09e69299ac_wgs_gdc_realn.bam",
-                         "/home/avraham/MaruvkaLab/Texas/strict_msmutect/prob_locus.tmp",
-                         0, 1, 1, 10, "/home/avraham/MaruvkaLab/Texas/strict_msmutect/tmp")
+    # run_single_histogram("/home/avraham/MaruvkaLab/Texas/gdc/fc8376df-e7c3-42e9-b7b3-3413c3493874/02ca2f53-bd02-4e48-98be-aa09e69299ac_wgs_gdc_realn.bam",
+    #                      "/home/avraham/MaruvkaLab/Texas/strict_msmutect/prob_locus.tmp",
+    #                      0, 1, 1, 10, "/home/avraham/MaruvkaLab/Texas/strict_msmutect/tmp")
     #
+    #
+    run_single_histogram("/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/deletions_over_boundaries.bam",
+                     "/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/real_locus.phobos",
+                     0, 1, 1, 10, "/home/avraham/MaruvkaLab/bkup/garbage")
     # run_single_allelic(
     #     "/home/avraham/MaruvkaLab/msmutect_runs/problems/integer_wierd_rounding/prob_locus.bam",
     #     "/home/avraham/MaruvkaLab/msmutect_runs/problems/integer_wierd_rounding/prob_locus",

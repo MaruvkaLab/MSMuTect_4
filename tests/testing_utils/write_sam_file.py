@@ -7,14 +7,6 @@ from tests.testing_utils.self_contained_utils import sample_bams_path, header_on
 # FakeRead = namedtuple("FakeRead", field_names=["read_start", "cigar_str"])
 
 
-
-
-
-
-
-
-
-
 def main():
 
     snp_read = [FakeRead(9985, "15M1X6D85M", subsitutions=["N"]) for i in range(5)]
