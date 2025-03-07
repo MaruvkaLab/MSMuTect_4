@@ -35,7 +35,7 @@ def create_MD_string(read: FakeRead, modifications: List[str]) -> str:
     """
     cigar_split = split_cigar(read.cigar_str)
     ops = []
-    sub_idx = 0
+    mod_idx = 0
     current_match = 0
     for cig in cigar_split:
         if cig[-1]=="M":
@@ -47,11 +47,13 @@ def create_MD_string(read: FakeRead, modifications: List[str]) -> str:
             current_match=0
 
         if cig[-1]=="X":
-            ops.append(modifications[sub_idx])
-            sub_idx+=1
+            ops.append(modifications[mod_idx])
+            mod_idx+=1
+        elif cig[-1]=="I":
+            mod_idx+=1
         elif cig[-1] == "D":
-            ops.append(f"^{modifications[sub_idx]}")
-            sub_idx+=1
+            ops.append(f"^{modifications[mod_idx]}")
+            mod_idx+=1
 
     if current_match!=0:
         ops.append(str(current_match))
@@ -112,11 +114,11 @@ def add_to_end_of_file(fp: str, lines: str):
     with open(fp, 'a') as sam:
         sam.write(lines)
 
-def create_readline(fake_reads: List[FakeRead], base_seq=None, base_seq_position: int = None, read_length: int = 101):
-    if base_seq is None:
-        base_seq = simple_seq()
-    if base_seq_position is None:
-        base_seq_position = 9975
+def create_readline(fake_reads: List[FakeRead], base_seq: str, base_seq_position: int, read_length: int):
+    # if base_seq is None:
+    #     base_seq = simple_seq()
+    # if base_seq_position is None:
+    #     base_seq_position = 9975
     if len(fake_reads) == 0:
         return
     seq = 'A' * read_length

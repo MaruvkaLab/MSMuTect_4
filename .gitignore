@@ -2,6 +2,7 @@
 *.bai
 *.c
 *.so
+*.phobos
 *.tsv
 *.csv
 *.MutOnly

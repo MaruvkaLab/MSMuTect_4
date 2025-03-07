@@ -17,6 +17,9 @@ def locus_file_path():
 def real_locus_file_path():
     return os.path.join(sample_bams_path(), "real_locus.phobos")
 
+def extended_locus_file_path():
+    return os.path.join(sample_bams_path(), "real_locus_impure.phobos")
+
 def locus_file_path_strict():
     return os.path.join(sample_bams_path(), "fake_loci_strict.tsv")
 

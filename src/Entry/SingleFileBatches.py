@@ -82,7 +82,7 @@ if __name__ == '__main__':
     #                      0, 1, 1, 10, "/home/avraham/MaruvkaLab/Texas/strict_msmutect/tmp")
     #
     #
-    run_single_histogram("/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/deletions_over_boundaries.bam",
+    run_single_histogram("/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/one_insertion_2_deletion.bam",
                      "/home/avraham/MaruvkaLab/MSMuTect_0.5/tests/sample_bams/real_locus.phobos",
                      0, 1, 1, 10, "/home/avraham/MaruvkaLab/bkup/garbage")
     # run_single_allelic(

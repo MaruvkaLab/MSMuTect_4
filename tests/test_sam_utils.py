@@ -20,15 +20,19 @@ class TestSamUtils(unittest.TestCase):
         reads = [
             FakeRead(1, "101M", "A"*101, []), # regular read
             FakeRead(1, "10M3D91M", "A" * 101, ),  # 3 base deletion
+            FakeRead(1, "10M6D91M", "A"*101)
         ]
 
         modifications = [
             [],
-            ["TTT"]]
+            ["TTT"],
+            ["TACTAC"],
+        ]
 
         results = [
             "101",
-            "10^TTT91"
+            "10^TTT91",
+            "10^TACTAC91"
         ]
         for i in range(len(reads)):
             read = reads[i]
@@ -41,8 +45,9 @@ class TestSamUtils(unittest.TestCase):
         reads_mods = [
             # (FakeRead(12, "10M3D91M"), ["TAC"]),
             (FakeRead(12, "5M1X3M3D92M", insertions_snps=["N"]), ["G", "CTA"]),
+            (FakeRead(12, "5M6D96M"), ["ACT"*2]),
+            (FakeRead(12, "20M3I2M6D79M", insertions_snps=["GGG"]), ["GGG", "TAC"*2])
         ]
-
 
         for r in reads_mods:
             read = r[0]

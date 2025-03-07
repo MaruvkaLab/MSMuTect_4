@@ -53,12 +53,8 @@ class Histogram:
 
     def add_read_to_repeat_length_dict(self, read: AlignedSegment) -> int:
         mutations = extract_locus_mutations(read, self.locus.start, self.locus.end, len(self.locus.pattern))
-        # if mutations[0].insertion:
-        #     croc=1
-        # print(mutations)
         has_snp, has_indel = self.mutation_types(mutations)
-        if has_snp:
-            croc=1
+
         current_repeat_length = 0
         if has_snp:
             for m in mutations:
