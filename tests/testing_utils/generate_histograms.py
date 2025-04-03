@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from collections import defaultdict
 
 from src.IndelCalling.Locus import Locus
@@ -95,6 +95,14 @@ def histogram_histograms() -> List[Histogram]:
     ret.append(histogram_2)
 
     return ret
+
+def real_case_histograms() -> Tuple[Histogram, Histogram]:
+    real_locus = Locus("1", 1146432, 1146455, "T", 24, "T"*24)
+    normal_histogram = Histogram(real_locus)
+    tumor_histogram = Histogram(real_locus)
+    normal_histogram.repeat_lengths = convert_dict_default({24: 13, 25: 1})
+    tumor_histogram.repeat_lengths = convert_dict_default({24: 22, 23: 7})
+    return normal_histogram, tumor_histogram
 
 
 if __name__ == '__main__':

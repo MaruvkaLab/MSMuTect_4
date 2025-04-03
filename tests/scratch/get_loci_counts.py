@@ -40,12 +40,20 @@ def get_loci_counts_per_motif_size(fp: str, out_dir: str, old: bool) -> PerMotif
     return ret
 
 def main():
-    res_hist = get_loci_counts_per_motif_size("/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/res_low_purity.full.mut.tsv",
-                                              "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/new_results3", old=False)
-    # res_hist = get_loci_counts_per_motif_size(
-    #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/TCGA-BR-4201.full.mut.tsv",
-    #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/tmp", old=True)
+
+    res_hist = get_loci_counts_per_motif_size(
+        "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/TCGA-BR-4201.full.mut.tsv",
+        "/home/avraham/MaruvkaLab/msmutect_runs/full_version/comparison_old_and_new/old", old=True)
     print(res_hist)
+    # res_hist = get_loci_counts_per_motif_size(
+    #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/res_low_purity.full.mut.tsv",
+    #     "/home/avraham/MaruvkaLab/Texas/strict_msmutect/results/new_results3", old=False)
+    # print(res_hist)
+    res_hist = get_loci_counts_per_motif_size(
+        "/home/avraham/MaruvkaLab/msmutect_runs/full_version/3_7_25.full.mut.tsv",
+        "/home/avraham/MaruvkaLab/msmutect_runs/full_version/comparison_old_and_new/new", old=False)
+    print(res_hist)
+
 
 if __name__ == '__main__':
     main()

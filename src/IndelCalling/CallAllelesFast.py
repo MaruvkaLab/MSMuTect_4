@@ -50,17 +50,18 @@ class AllelesMaximumLikelihood:
         for length in self.repeat_lengths:
             for j in range(self.num_alleles):
                 new_summed = 1e-10
+                i_length = int(length)
                 for k in range(len(self.frequencies)):
-                    new_summed+=self.frequencies[k]*self.noise_table[self.random_repeat_lengths[k]][length]
+                    new_summed+=self.frequencies[k]*self.noise_table[int(self.random_repeat_lengths[k])][i_length]
                 # summed = np.sum(self.noise_table[self.random_repeat_lengths[:], length] * self.frequencies[:] + 1e-10)
-                self.Z_i_j[length][j] = (self.noise_table[self.random_repeat_lengths[j]][length] * self.frequencies[j]) / new_summed
+                self.Z_i_j[i_length][j] = (self.noise_table[int(self.random_repeat_lengths[j])][i_length] * self.frequencies[j]) / new_summed
                 # self.Z_i_j[length, j] = self.noise_table[self.random_repeat_lengths[j], length] * self.frequencies[j] / np.sum(self.noise_table[self.random_repeat_lengths[:], length] * self.frequencies[:] + 1e-10)
 
     def estimate_new_frequencies(self):
         for k in range(self.num_alleles):
             new_summed = 0
             for i, r in enumerate(self.repeat_lengths):
-                new_summed+=self.Z_i_j[r][k] * self.num_reads[i]
+                new_summed+=self.Z_i_j[int(r)][k] * self.num_reads[i]
             self.new_frequencies[k] = new_summed/sum(self.num_reads)
 
             # self.new_frequencies[k] = np.sum(self.Z_i_j[self.repeat_lengths, k] * self.num_reads) / np.sum(self.num_reads)
@@ -69,10 +70,10 @@ class AllelesMaximumLikelihood:
         Theta_new_temp = [0] * len(self.supported_repeat_lengths)#np.zeros(self.supported_repeat_lengths.size)
         for j in range(self.num_alleles):
             for k in range(len(self.supported_repeat_lengths)):#self.supported_repeat_lengths.size):
-                Test_theta = self.supported_repeat_lengths[k]
+                Test_theta = int(self.supported_repeat_lengths[k])
                 summed = 1e-10
                 for i, r in enumerate(self.repeat_lengths):
-                    summed+=self.Z_i_j[r][j] * math.log(self.noise_table[Test_theta][r]+1e-10) * self.num_reads[i]
+                    summed+=self.Z_i_j[int(r)][j] * math.log(self.noise_table[Test_theta][int(r)]+1e-10) * self.num_reads[i]
                 # Theta_new_temp[k] = sum(self.Z_i_j[self.repeat_lengths, j] * np.log(
                 #     self.noise_table[Test_theta, self.repeat_lengths] + 1e-10) * self.num_reads)
                 Theta_new_temp[k] = summed
@@ -89,7 +90,7 @@ class AllelesMaximumLikelihood:
         for k in range(len(self.repeat_lengths)): #self.repeat_lengths.size):
             summed = 1e-10
             for i,r in enumerate(self.random_repeat_lengths):
-                summed+=self.frequencies[i]*self.noise_table[r][self.repeat_lengths[k]]
+                summed+=self.frequencies[i]*self.noise_table[int(r)][int(self.repeat_lengths[k])]
             summed_log = math.log(summed)
             log_likelihood += summed_log*self.num_reads[k]
         return log_likelihood

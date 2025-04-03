@@ -167,6 +167,17 @@ def run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: in
 
 
 if __name__ == '__main__':
+    # ../../ MSMuTect_0
+    # .5 / msmutect.sh - -from_file - m - A - N
+    # MSMuTect_normal_hist_to_run.normal.hist.tsv - T
+    # MSMuTect_normal_hist_to_run.normal.hist.tsv - l
+    # MSMuTect_normal_hist_to_run.normal.hist.tsv - O
+    # res / croc
+    #run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: int, required_reads: int, output_prefix: str)
+    tumor_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_tumor_hist_to_run.tumor.hist.tsv"
+    normal_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_normal_hist_to_run.normal.hist.tsv"
+    run_from_file(tumor_fp, normal_fp, 0, 10, 5, "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/res/croc")
+
     print(  f"{Locus.header()}\t{Histogram.header(prefix='NORMAL_')}\t{AlleleSet.header(prefix='NORMAL_')}\t{Histogram.header(prefix='TUMOR_')}\t{AlleleSet.header(prefix='TUMOR_')}\t{MutationCall.header()}")
 # )
 #     run_mutations_pair("/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/098698a0-3107-49e3-9226-d6d105f195a1.hist.tsv",
