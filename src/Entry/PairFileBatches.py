@@ -125,7 +125,7 @@ def construct_histogram_from_tsv(histogram_line: str) -> Histogram:
     locus = Locus(chromosome, start, end, pattern, num_ref_repeats, ref_seq)
     repeat_dict = defaultdict(int)
     for repeat_length, support in zip(motif_repeats, motif_repeat_support):
-        repeat_dict[float(repeat_length)] = int(support)
+        repeat_dict[int(repeat_length)] = int(support)
     histogram = Histogram(locus=locus)
     histogram.repeat_lengths = repeat_dict
     return histogram
@@ -174,11 +174,14 @@ if __name__ == '__main__':
     # MSMuTect_normal_hist_to_run.normal.hist.tsv - O
     # res / croc
     #run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: int, required_reads: int, output_prefix: str)
-    tumor_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_tumor_hist_to_run.tumor.hist.tsv"
-    normal_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_normal_hist_to_run.normal.hist.tsv"
-    run_from_file(tumor_fp, normal_fp, 0, 10, 5, "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/res/croc")
+    # tumor_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_tumor_hist_to_run.tumor.hist.tsv"
+    # normal_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_normal_hist_to_run.normal.hist.tsv"
+    # run_from_file(tumor_fp, normal_fp, 0, 10, 5, "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/res/croc")
 
-    print(  f"{Locus.header()}\t{Histogram.header(prefix='NORMAL_')}\t{AlleleSet.header(prefix='NORMAL_')}\t{Histogram.header(prefix='TUMOR_')}\t{AlleleSet.header(prefix='TUMOR_')}\t{MutationCall.header()}")
+    tumor_fp = "/media/avraham/all_qs_data/tmp/0299c399-f301-444a-b7c4-57fa96ef5e2f.hist.tsv"
+    normal_fp = "/media/avraham/all_qs_data/tmp/0148fc66-05c6-489c-af47-26d12cbd898d.hist.tsv"
+    run_from_file(tumor_fp, normal_fp, 0, 1000, 5, "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/res/croc")
+    # print(  f"{Locus.header()}\t{Histogram.header(prefix='NORMAL_')}\t{AlleleSet.header(prefix='NORMAL_')}\t{Histogram.header(prefix='TUMOR_')}\t{AlleleSet.header(prefix='TUMOR_')}\t{MutationCall.header()}")
 # )
 #     run_mutations_pair("/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/098698a0-3107-49e3-9226-d6d105f195a1.hist.tsv",
 #                   "/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/009dcaf2-f6bb-415e-b088-6e852853b1a2.hist.tsv",
