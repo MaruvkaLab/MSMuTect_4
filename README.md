@@ -10,9 +10,9 @@ Download the binary from the following link:
 ### Local
 If on a different platform, or to achieve maximum performance, do the following:  
 git clone https://github.com/MaruvkaLab/MSMuTect_4  
-cd MSMuTect_4
+cd MSMuTect_4  
 pip3 install -r requirements.txt  
-bash build.sh  #optional; improves performance
+bash build.sh  #optional; improves performance  
 When running, use MSMuTect_4/msmutect.sh everywhere the documentation says 'msmutect'
 
 # A Note About Versions
@@ -22,8 +22,8 @@ is much more accurate for longer motif repeats. Both have executable binaries av
 
 # Usage
 ## Locus File
-We strongly recommend using one of the precompiled locus files available at ##. They can be subsampled
-as desired as long as the order is maintained
+We strongly recommend using one of the precompiled locus files we have available. Please email k.avraham@technion.ac.il or yosi.maruvka@bfe.technion.ac.il to get access to them. 
+They can be subsampled as desired as long as the order is maintained
 
 If want to use your own locus file, there are a couple of steps you must do:
 1. First, the loci file must be sorted properly. This should work on all unix systems:   
@@ -58,10 +58,10 @@ It deletes them at the end. If, for some reason, msmutect is interrupted, these 
 
 ### Understanding the 'Call' Column
 M = Mutation  
-NM = Not Mutation
+NM = Not Mutation  
 AN = No Alleles. Either the tumor sample or the normal sample lacks alleles  
 RR = Reversion to Reference. The normal sample held an alternative allele, and the tumor had a mutation of the reference allele  
-GV = Germline Variation. There are too many SNPs in the vicinity of the locus to confidently say that the indels were of the MS motif
+GV = Germline Variation. There are too many SNPs in the vicinity of the locus to confidently say that the indels were of the MS motif  
 FFT = Failed Fisher Test. Passed other tests to be called a mutation, but failed the Fisher's exact test of significance      
 INS = Insufficient Support. The normal sample has multiple alleles, but one of them has insufficient support, indicating a noisy locus  
 TMA = Too Many Alleles. Normal sample has too many alleles, and hence the locus is too noisy to call    
@@ -69,23 +69,6 @@ TMA = Too Many Alleles. Normal sample has too many alleles, and hence the locus 
 MSMuTect can generate a vcf file with the results in addition to the regular output (a tsv file).   
 The vcf file will include every locus that had an alternate allele in either the tumor or the normal sample.   
 However, every locus that is not called as a mutation will be marked as filtered in the filter column of the vcf file, with the resulting call (ex. NM, INS, AN, etc.) as the filter
-# Changes, Pull Requests, and Compiling the Binary Executable
-Users should typically install MSMuTect as described in the "Installation" section. However, if you 
-wish to make changes, this is also practicable. The code is straightforward and the entry point is in src/Entry/main.py.  
-When making changes, you don't need to recompile the code every time: simply don't run build.sh and msmutect.sh will use the python files directly.  
-If you add any interesting features, we would be grateful if you could share them with us by emailing us or opening a pull request.  
-If you did run build.sh and want to revert the .pyx files to python files, run reverse_rename.sh.   
-If for some reason you would like to compile a binary executable, this is a little tricky and not recommended. The most important thing 
-to understand is that there are two levels of compilation:  
-1. Compiling every individual module. This is purely to improve performance. It is not neccesary to run msmutect.sh
-2. Compiling the binary executable so that it can be run by itself.  
-
-The steps to create the binary executable are as follows:   
-1. Run build.sh to create compile the individual python modules
-2. Go to pyinstaller_build
-3. Update the paths in build.sh (this is the build.sh in pyinstaller_build, not the one in the top level directory)
-4. Run build.sh. The resulting executable will be put in pyinstaller_build/dist
-
 
 
 # Publication and Citation
@@ -96,4 +79,22 @@ This version is known as version 4.1
 # Authors
 Avraham Kahan, Dr. Yosef Maruvka, Gaia Frant, and the Maruvka Lab at Technion  
 For questions, suggestions, or concerns, open an issue on github or email k.avraham@technion.ac.il or yosi.maruvka@bfe.technion.ac.il
+
+# Changes, Pull Requests, and Compiling the Binary Executable (not relevant for most users)
+Users should typically install MSMuTect as described in the "Installation" section. However, if you 
+wish to make changes, this is also practicable. The code is straightforward and the entry point is in src/Entry/main.py.  
+When making changes, you don't need to recompile the code every time: simply don't run build.sh and msmutect.sh will use the python files directly.  
+If you add any interesting features, we would be grateful if you could share them with us by emailing us or opening a pull request.  
+If you did run build.sh and want to revert the .pyx files to python files, run reverse_rename.sh.   
+If for some reason you would like to compile a binary executable, this is a little tricky and not recommended. The most important thing 
+to understand is that there are two levels of compilation:  
+1. Compiling every individual module. This is purely to improve performance. It is not necessary for running msmutect.sh, but it is necessary to create
+binary executable
+2. Compiling the binary executable so that it can be run by itself.  
+
+The steps to create the binary executable are as follows:   
+1. Create a python virtual environment with all of the dependencies in requirements.txt and pyinstaller
+2. Run build.sh to compile the individual python modules
+3. Update the paths in pyinstaller_build/build.sh (Note this is different than the top level build.sh)
+4. Run pyinstaller_build/build.sh. The resulting executable will be put in pyinstaller_build/dist
 
