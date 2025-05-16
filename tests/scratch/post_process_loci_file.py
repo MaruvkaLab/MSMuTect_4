@@ -56,10 +56,5 @@ def create_new_loci_file(input_fp: str, output_fp: str):
 
 
 if __name__ == '__main__':
-    # print(reverse_complement("ACGGGT"))
-    # print(extrapolate_pattern("ACTG", 9))
-
-    create_new_loci_file("/home/avraham/MaruvkaLab/Texas/croc2",
-                         "/home/avraham/MaruvkaLab/Texas/croc3")
-    # create_new_loci_file("/home/avraham/MaruvkaLab/Texas/SNVs/slimeball/data/hg38_1to15_all_perf_sorted.phobos",
-    #                      "/home/avraham/MaruvkaLab/msmutect_runs/hg38_all_rc_corrected")
+    create_new_loci_file("/media/avraham/all_qs_data/hg19_1to15_all_perf_sorted", # INPUT FP
+                         "/home/avraham/MaruvkaLab/msmutect_runs/data/hg19_1to15_all_perf_sorted_rc_corrected.phobos") # OUTPUT FP

@@ -30,6 +30,7 @@ def msmutect_path():
 
 
 def msmutect_executable_path():
+    # return "/home/avraham/MaruvkaLab/MSMuTect_0.5/pyinstaller_build/dist/msmutect"
     return os.path.join(msmutect_path(), "msmutect.sh")
 
 

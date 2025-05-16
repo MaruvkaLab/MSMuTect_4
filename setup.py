@@ -4,7 +4,7 @@ from Cython.Build import cythonize
 
 setup(
     name='msmutect',
-    version='0.5',
+    version='4.1',
     packages=['src', 'src.Entry', 'src.GenomicUtils', 'src.IndelCalling'],
     entry_points={
         'console_scripts': ['msmutect=src.Entry.main:main'],

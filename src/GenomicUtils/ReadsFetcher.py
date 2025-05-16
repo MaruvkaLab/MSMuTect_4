@@ -83,6 +83,8 @@ class ReadsFetcher:
             return "X"
         elif chromosome.upper().find("Y") != -1:
             return "Y"
+        elif chromosome.upper().find("M") != -1:
+            return "M"
         else:
             numeric_filter = filter(str.isdigit, chromosome)
             return "".join(numeric_filter)
