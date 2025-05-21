@@ -11,7 +11,7 @@ from src.GenomicUtils.NoiseTable import get_noise_table
 from src.IndelCalling.Histogram import Histogram
 from src.IndelCalling.AlleleSet import AlleleSet
 from src.IndelCalling.Locus import Locus
-from src.IndelCalling.CallAlleles import calculate_alleles
+from src.IndelCalling.CallAllelesFast import calculate_alleles
 from src.Entry import BatchUtil
 from src.Entry.FileBackedQueue import FileBackedQueue
 

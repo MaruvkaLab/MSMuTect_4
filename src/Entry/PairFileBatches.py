@@ -7,7 +7,7 @@ from pysam import AlignmentFile
 from src.IndelCalling.Locus import Locus
 from src.IndelCalling.AlleleSet import AlleleSet
 from src.IndelCalling.Histogram import Histogram
-from src.IndelCalling.CallAlleles import calculate_alleles
+from src.IndelCalling.CallAllelesFast import calculate_alleles
 from src.IndelCalling import CallAllelesFast
 from src.IndelCalling.CallMutations import call_mutations, is_possible_mutation
 from src.IndelCalling.FisherTest import Fisher
@@ -149,10 +149,6 @@ def run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: in
         except StopIteration:
             break # finished consuming file. batch end could be malformed
         normal_histogram = construct_histogram_from_tsv(normal_file.readline())
-        # tumor_alleles = calculate_alleles(tumor_histogram, noise_table,
-        #                                                   required_read_support=required_reads)
-        # normal_alleles = calculate_alleles(normal_histogram, noise_table,
-        #                                                    required_read_support=required_reads)
         tumor_alleles = CallAllelesFast.calculate_alleles(tumor_histogram, noise_table, required_read_support=required_reads)
         normal_alleles = CallAllelesFast.calculate_alleles(normal_histogram, noise_table, required_read_support=required_reads)
         mutation_calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table, fisher)))

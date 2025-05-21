@@ -1,8 +1,7 @@
 import unittest, numpy as np
 
-from src.GenomicUtils.NoiseTable import get_noise_table
 from tests.testing_utils.generate_histograms import get_allele_histograms
-from src.IndelCalling.CallAlleles import *
+from src.IndelCalling.CallAllelesFast import *
 
 
 class TestCalcAlleles(unittest.TestCase):

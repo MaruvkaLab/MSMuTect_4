@@ -3,7 +3,7 @@ import numpy as np
 from pysam.libcvcf import defaultdict
 from scipy.stats import binom
 
-from src.IndelCalling.CallAlleles import calculate_alleles
+from src.IndelCalling.CallAllelesFast import calculate_alleles
 from src.IndelCalling.FisherTest import Fisher
 from src.IndelCalling.MutationCall import MutationCall
 from src.IndelCalling.AlleleSet import AlleleSet
@@ -52,7 +52,7 @@ def log_likelihood(histogram: Histogram, alleles: AlleleSet, noise_table: np.arr
 def calculate_AICs(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array) -> AICs:
     num_normal_alleles = len(normal_alleles.repeat_lengths)
     num_tumor_alleles = len(tumor_alleles.repeat_lengths)
-    L_Norm_Tum = log_likelihood(normal_alleles.histogram, tumor_alleles, noise_table)
+    L_Norm_Tum = log_likelihood(normal_alleles.histogram, tumor_alleles, noise_table) # how well the normal model explains tumor alleles
     L_Norm_Norm = log_likelihood(normal_alleles.histogram, normal_alleles, noise_table)
     L_Tum_Tum = log_likelihood(tumor_alleles.histogram, tumor_alleles, noise_table)
     L_Tum_Norm = log_likelihood(tumor_alleles.histogram, normal_alleles, noise_table)
@@ -63,7 +63,10 @@ def calculate_AICs(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_ta
 
 
 def passes_AICs(AIC_scores: AICs, LOR_ratio = 8.0) -> bool:
-    return AIC_scores.tumor_tumor - AIC_scores.tumor_normal and AIC_scores.normal_normal - AIC_scores.normal_tumor < -LOR_ratio
+    return (((AIC_scores.tumor_tumor - AIC_scores.tumor_normal) < -LOR_ratio)
+            and ((AIC_scores.normal_normal - AIC_scores.normal_tumor) < -LOR_ratio)) # fixed version
+    # return AIC_scores.tumor_tumor - AIC_scores.tumor_normal and AIC_scores.normal_normal - AIC_scores.normal_tumor < -LOR_ratio
+
 
 
 def fisher_test(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, fisher_calculator: Fisher) -> float:

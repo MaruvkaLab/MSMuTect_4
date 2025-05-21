@@ -67,15 +67,21 @@ def get_mutation_histograms():
     ret = []
     locus_0 = Locus("1", 232435, 232445, "A", 11.0, "AAAAAAAAAAA")
     histogram_0 = Histogram(locus_0)
-    histogram_0.repeat_lengths = convert_dict_default({11: 77, 10: 24, 12: 5, 9: 2})
+    num_reads = 100
+    histogram_0.repeat_lengths = convert_dict_default({11: 40, 6: 10})
     ret.append(histogram_0)
 
     # -----------------------------------------------------------------------------
     histogram_1 = Histogram(locus_0)
-    histogram_1.repeat_lengths = convert_dict_default({11: 22, 10: 55, 12: 5, 8: 2})
+    histogram_1.repeat_lengths = convert_dict_default({11: 50})
     ret.append(histogram_1)
     return ret
 
+def get_mutation_histograms_parameters(repeats, repeat_lengths):
+    locus_0 = Locus("1", 232435, 232445, "A", 11.0, "AAAAAAAAAAA")
+    histogram_0 = Histogram(locus_0)
+    histogram_0.repeat_lengths = convert_dict_default({r: rl for r, rl in zip(repeats, repeat_lengths)})
+    return histogram_0
 
 def histogram_histograms() -> List[Histogram]:
     ret = []
