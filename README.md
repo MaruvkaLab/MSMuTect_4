@@ -3,12 +3,16 @@ Indel, Allele and Mutation caller, specifically designed to call mutations in mi
 
 # Installation
 ### Binary
+NOTE: The 4.1 version binary is not available on github. It is available on google drive:
+https://drive.google.com/file/d/11a7EwXuZp-dKR6O7e09a6V5UB7Lq_g6K/view?usp=drive_link
+When the bleeding branch moves to main, we will upload the 4.1 binary to github
+
 There is a prebuilt x86_64 linux binary available in releases.  
 Note: The binary is slightly slower than the 'Local' option.   
 Download the binary from the following link:
 [fill in link]
 ### Local
-If on a different platform, or to achieve maximum performance, do the following:  
+If on a different platform, or to achieve maximum performance (~25% faster than the binary), do the following:  
 git clone https://github.com/MaruvkaLab/MSMuTect_4  
 cd MSMuTect_4  
 pip3 install -r requirements.txt  
@@ -22,7 +26,10 @@ is much more accurate for longer motif repeats. Both have executable binaries av
 
 # Usage
 ## Locus File
-We strongly recommend using one of the precompiled locus files we have available. Please email k.avraham@technion.ac.il or yosi.maruvka@bfe.technion.ac.il to get access to them. 
+We strongly recommend using one of the precompiled locus files we have available.
+For HG38, the following loci file is best: https://drive.google.com/file/d/1IiWVp1uPz00Daax8z4bP-XI2v_DQPGk7/view?usp=sharing
+For HG19, the following loci file is best: https://drive.google.com/file/d/1P9W6VBcpc1bfVXXTiyx9EldK2mbdGiv5/view?usp=sharing
+For other genome builds, please email us.
 They can be subsampled as desired as long as the order is maintained
 
 If want to use your own locus file, there are a couple of steps you must do:

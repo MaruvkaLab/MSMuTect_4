@@ -2,7 +2,7 @@ from scipy.stats import poisson
 import matplotlib.pyplot as plt
 
 plots=[]
-depth=60
+depth=80
 read_length=151
 for locus_length in range(0, 130):
     possible_bases = (read_length-locus_length-20)

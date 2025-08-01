@@ -2,7 +2,7 @@ import sys, os, time, random
 
 
 def get_unique_filename():
-    return (f".tmp_{os.getpid()}_{time.time()}_{random.randint(1, os.getpid()*4)}") # while not provable random, this is good enough for now
+    return (f".tmp_{os.getpid()}_{time.time()}_{random.randint(1, os.getpid()*4)}") # while not provably random, this is good enough for now
 
 
 class FileBackedQueue:

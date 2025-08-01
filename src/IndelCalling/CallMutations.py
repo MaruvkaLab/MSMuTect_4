@@ -45,14 +45,14 @@ def log_likelihood(histogram: Histogram, alleles: AlleleSet, noise_table: np.arr
         return -1_000_000.0
     for length in rounded_histogram.keys():
         if length < 40:
-            L_k_log+=rounded_histogram[length]*np.log(sum(alleles.frequencies*noise_table[alleles.repeat_lengths, length]) + 1e-6)
+            L_k_log+=rounded_histogram[length]*np.log(sum(alleles.frequencies*noise_table[alleles.repeat_lengths, length]) + 1e-6) # used to be 1e-6
     return L_k_log
 
 
 def calculate_AICs(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array) -> AICs:
     num_normal_alleles = len(normal_alleles.repeat_lengths)
     num_tumor_alleles = len(tumor_alleles.repeat_lengths)
-    L_Norm_Tum = log_likelihood(normal_alleles.histogram, tumor_alleles, noise_table) # how well the normal model explains tumor alleles
+    L_Norm_Tum = log_likelihood(normal_alleles.histogram, tumor_alleles, noise_table) # how well the tumor model explains normal histogram
     L_Norm_Norm = log_likelihood(normal_alleles.histogram, normal_alleles, noise_table)
     L_Tum_Tum = log_likelihood(tumor_alleles.histogram, tumor_alleles, noise_table)
     L_Tum_Norm = log_likelihood(tumor_alleles.histogram, normal_alleles, noise_table)
@@ -65,6 +65,7 @@ def calculate_AICs(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_ta
 def passes_AICs(AIC_scores: AICs, LOR_ratio = 8.0) -> bool:
     return (((AIC_scores.tumor_tumor - AIC_scores.tumor_normal) < -LOR_ratio)
             and ((AIC_scores.normal_normal - AIC_scores.normal_tumor) < -LOR_ratio)) # fixed version
+    # return (AIC_scores.tumor_tumor - AIC_scores.tumor_normal) < -LOR_ratio
     # return AIC_scores.tumor_tumor - AIC_scores.tumor_normal and AIC_scores.normal_normal - AIC_scores.normal_tumor < -LOR_ratio
 
 
@@ -72,6 +73,9 @@ def passes_AICs(AIC_scores: AICs, LOR_ratio = 8.0) -> bool:
 def fisher_test(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, fisher_calculator: Fisher) -> float:
     reads_sets = hist2vecs(tumor_alleles.histogram, normal_alleles.histogram)  # order is important for Fisher test
     one_sided_fisher = fisher_calculator.test(reads_sets.first_set, reads_sets.second_set)
+    if one_sided_fisher:
+        croc=1
+        fisher_calculator.test(reads_sets.first_set, reads_sets.second_set)
     return one_sided_fisher
 
 
@@ -146,8 +150,8 @@ def call_verified_locus(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noi
         if p_value < fisher_threshold:
             if reversion_to_reference(normal_alleles, tumor_alleles, noise_table, fisher_calculator, fisher_threshold, LOR_ratio):
                 return MutationCall(MutationCall.REVERTED_TO_REFERENCE, normal_alleles, tumor_alleles, aic_values, p_value)
-            elif normal_alleles.histogram.is_noisy() or tumor_alleles.histogram.is_noisy():
-                return MutationCall(MutationCall.GERMLINE_VARIATIONS, normal_alleles, tumor_alleles, aic_values, p_value)
+            # elif normal_alleles.histogram.is_noisy() or tumor_alleles.histogram.is_noisy():
+            #     return MutationCall(MutationCall.GERMLINE_VARIATIONS, normal_alleles, tumor_alleles, aic_values, p_value)
             else: # everything looks mutated. not noisy. call mutation!
                 return MutationCall(MutationCall.MUTATION, normal_alleles, tumor_alleles, aic_values, p_value)
         else:
