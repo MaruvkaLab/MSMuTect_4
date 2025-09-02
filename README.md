@@ -4,7 +4,7 @@ Indel, Allele and Mutation caller, specifically designed to call mutations in mi
 # Installation
 ### Binary
 NOTE: The 4.1 version binary is not available on github. It is available on google drive:
-https://drive.google.com/file/d/11a7EwXuZp-dKR6O7e09a6V5UB7Lq_g6K/view?usp=drive_link
+https://drive.google.com/file/d/11a7EwXuZp-dKR6O7e09a6V5UB7Lq_g6K/view?usp=drive_link   
 When the bleeding branch moves to main, we will upload the 4.1 binary to github
 
 There is a prebuilt x86_64 linux binary available in releases.  
@@ -104,4 +104,3 @@ The steps to create the binary executable are as follows:
 2. Run build.sh to compile the individual python modules
 3. Update the paths in pyinstaller_build/build.sh (Note this is different than the top level build.sh)
 4. Run pyinstaller_build/build.sh. The resulting executable will be put in pyinstaller_build/dist
-

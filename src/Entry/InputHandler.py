@@ -27,7 +27,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 def exit_on(message: str, status: int = 1):
     # print message, and exit
-    print("ERROR: " + message)
+    sys.stderr.write("ERROR: " + message + "\n")
     sys.exit(status)
 
 

@@ -19,7 +19,7 @@ class AlleleSet:
 
     @staticmethod
     def header(prefix=''):
-        return f"{prefix}LOG_LIKELIHOOD\t{prefix}ALLELE_1\t{prefix}ALLELES_2\t{prefix}ALLELES_3\t{prefix}ALLELES_4\t{prefix}FRACTION_1\t{prefix}FRACTION_2\t{prefix}FRACTION_3\t{prefix}FRACTION_4"
+        return f"{prefix}LOG_LIKELIHOOD\t{prefix}ALLELE_1\t{prefix}ALLELE_2\t{prefix}ALLELE_3\t{prefix}ALLELE_4\t{prefix}FRACTION_1\t{prefix}FRACTION_2\t{prefix}FRACTION_3\t{prefix}FRACTION_4"
 
     def __len__(self):
         return len(self.repeat_lengths)
