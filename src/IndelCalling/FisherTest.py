@@ -54,6 +54,21 @@ class Fisher:
         return p_value
 
 
+def big_divide(numerator: int, denominator: int) -> float:
+    # does division for massive numbers without causing overflow error
+    numerator_log = math.log(numerator)
+    denominator_log = math.log(denominator)
+    return math.exp(numerator_log-denominator_log)
+
+
+def one_sided_fisher_test(first_set: np.array, second_set: np.array):
+    p_value = 1
+    for i in range(first_set.size):
+        p_value *= math.comb(int(first_set[i] + second_set[i]), int(first_set[i]))
+    p_value = big_divide(p_value, math.comb(int(np.sum(first_set) + np.sum(second_set)), int(np.sum(first_set))))
+    return p_value
+
+
 if __name__ == '__main__':
     f=Fisher()
     a=f.big_divide(10, 3)

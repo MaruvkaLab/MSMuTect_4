@@ -54,11 +54,10 @@ def partial_full_pair(loci: List[Locus], normal: str, tumor: str, flanking: int,
     if len(loci) != 0:
         normal_fetcher = ReadsFetcher(AlignmentFile(normal, "rb"), loci[0].chromosome)
         tumor_fetcher = ReadsFetcher(AlignmentFile(tumor, "rb"), loci[0].chromosome)
-        fisher = Fisher()
         for locus in loci:
             normal_alleles = get_alleles(locus, normal_fetcher, flanking, noise_table, required_reads)
             tumor_alleles = get_alleles(locus, tumor_fetcher, flanking, noise_table, required_reads)
-            calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table, fisher)))
+            calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table)))
     calls.close()
     return calls
 
@@ -97,7 +96,7 @@ def partial_mutations_pair(loci: List[Locus], normal: str, tumor: str, flanking:
             normal_alleles = get_alleles(locus, normal_fetcher, flanking, noise_table, required_reads)
             if is_possible_mutation(normal_alleles):
                 tumor_alleles = get_alleles(locus, tumor_fetcher, flanking, noise_table, required_reads)
-                calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table, fisher)))
+                calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table)))
     calls.close()
     return calls
 
@@ -151,7 +150,7 @@ def run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: in
         normal_histogram = construct_histogram_from_tsv(normal_file.readline())
         tumor_alleles = CallAllelesFast.calculate_alleles(tumor_histogram, noise_table, required_read_support=required_reads)
         normal_alleles = CallAllelesFast.calculate_alleles(normal_histogram, noise_table, required_read_support=required_reads)
-        mutation_calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table, fisher)))
+        mutation_calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table)))
         # exit()
     mutation_calls.close()
     mutation_header = f"{Locus.header()}\t{Histogram.header(prefix='NORMAL_')}\t{AlleleSet.header(prefix='NORMAL_')}\t{Histogram.header(prefix='TUMOR_')}\t{AlleleSet.header(prefix='TUMOR_')}\t{MutationCall.header()}"
