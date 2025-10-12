@@ -36,7 +36,7 @@ def simple_index_check(bam: str):
     bai_path = bam[:-4] + ".bai"
     bam_bai_file_exists = os.path.exists(bam_bai_path)
     bai_file_exists = os.path.exists(bai_path)
-    index_file_older_than_bam_message = "Index file older than BAM file. Index file must be younger than BAM file. If you are sure the index file is correct, run 'touch [index_file]'"
+    index_file_older_than_bam_message = f"Index file older than BAM file for {bam}. Index file must be younger than BAM file. If you are sure the index file is correct, run 'touch [index_file]'"
     if bam_bai_file_exists:
         if os.path.getmtime(bam_bai_path) < os.path.getmtime(bam):
             exit_on(index_file_older_than_bam_message)
@@ -44,7 +44,7 @@ def simple_index_check(bam: str):
         if os.path.getmtime(bai_path) < os.path.getmtime(bam):
             exit_on(index_file_older_than_bam_message)
     else:
-        exit_on("Given BAM file/s are not sorted and/or indexed")
+        exit_on(f"Given BAM file {bam} is not sorted and/or indexed")
 
 
 def validate_indexing(bam_files: List[str]) -> None:
@@ -53,7 +53,11 @@ def validate_indexing(bam_files: List[str]) -> None:
     for bam in bam_files:
         simple_index_check(bam) # simply checks for .bai file
         validated = False
-        current_handle = pysam.AlignmentFile(open(bam, 'rb'))
+        try:
+            current_handle = pysam.AlignmentFile(open(bam, 'rb'))
+        except OSError:  # file was incomplete
+            exit_on(f"{bam} or it's index file is incomplete")
+
         for prefix in prefixes:
             try:
                 _ = current_handle.fetch(f"{prefix}{1}", start=10_000, multiple_iterators=False)
@@ -62,7 +66,7 @@ def validate_indexing(bam_files: List[str]) -> None:
             except ValueError:  # different prefix, or not indexed
                 continue
         if not validated:
-            exit_on("Given BAM file/s are not sorted and/or indexed, or contain an unsusual prefix (not 'chr', 'Chr', or nothing")
+            exit_on(f"Given BAM file {bam} is not sorted and/or indexed, or contain an unsusual prefix (not 'chr', 'Chr', or nothing)")
 
 
 def validate_bams(arguments: argparse.Namespace):
