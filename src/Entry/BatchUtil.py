@@ -8,6 +8,8 @@ from src.GenomicUtils.LocusFile import LociManager
 
 Chunk = namedtuple("Chunk", ["start", "end"])
 
+def minimum_chunk_size() -> int:
+    return 20_000
 
 def get_noise_table_path() -> str:
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -52,7 +54,7 @@ def run_single_threaded(batch_function, args: list, loci_iterator: LociManager, 
     runs batch fuction without invoking pool to save performance (serialization, etc.)
     """
     results = []
-    batch_sizes = get_batch_sizes(total_batch_size, 100_000)
+    batch_sizes = get_batch_sizes(total_batch_size, minimum_chunk_size())
     for batch in batch_sizes:
         current_loci = loci_iterator.get_batch(batch)
         results.append(batch_function(*([current_loci] + args + [result_dir])))
@@ -69,7 +71,7 @@ def run_batch(batch_function, args: list, loci_iterator: LociManager, total_batc
     if cores == 1:
         return run_single_threaded(batch_function, args, loci_iterator, total_batch_size, result_dir)
     with Pool(processes=cores) as threads:
-        batch_sizes = get_batch_sizes(total_batch_size, 100_000)
+        batch_sizes = get_batch_sizes(total_batch_size, minimum_chunk_size())
 
         for batch in batch_sizes:
             num_active_processes = sum([1 for p in results if not p.ready()]) # how many processes are actually running

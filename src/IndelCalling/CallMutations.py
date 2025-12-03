@@ -22,8 +22,19 @@ def cdf_test(first_allele_reads: int, second_allele_reads: int, p_equal: float =
     else:
         return MutationCall.MUTATION
 
+def proper_normal_alleles_reads_distribution(normal_alleles: AlleleSet, required_level_of_read_support: int = 10):
+    # 90% of normal reads must map to the first 2 repeat lengths and 10 total reads are required
+    read_supports = list(normal_alleles.histogram.rounded_repeat_lengths.values())
+    read_supports_sorted = list(sorted(read_supports))
+    total_reads = sum(read_supports_sorted)
+    first_2_alleles_support = sum(read_supports_sorted[:2])
+    return (first_2_alleles_support/total_reads >= 0.9) and (total_reads>=required_level_of_read_support)
+
 
 def check_normal_alleles(normal_alleles: AlleleSet, p_equal=0.3) -> int:
+    if not proper_normal_alleles_reads_distribution(normal_alleles):
+        return MutationCall.INSUFFICIENT
+
     if len(normal_alleles.repeat_lengths) == 0:
         return MutationCall.NO_ALLELES
     elif len(normal_alleles.repeat_lengths) == 1:
@@ -38,7 +49,7 @@ def check_normal_alleles(normal_alleles: AlleleSet, p_equal=0.3) -> int:
         return MutationCall.TOO_MANY_ALLELES
 
 
-def log_likelihood(histogram: Histogram, alleles: AlleleSet, noise_table: np.array) -> float:
+def log_likelihood(histogram: Histogram, alleles: AlleleSet, noise_table: np.ndarray) -> float:
     L_k_log = 0
     rounded_histogram = histogram.rounded_repeat_lengths
     if alleles.repeat_lengths.size == 0:
@@ -49,7 +60,7 @@ def log_likelihood(histogram: Histogram, alleles: AlleleSet, noise_table: np.arr
     return L_k_log
 
 
-def calculate_AICs(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array) -> AICs:
+def calculate_AICs(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.ndarray) -> AICs:
     num_normal_alleles = len(normal_alleles.repeat_lengths)
     num_tumor_alleles = len(tumor_alleles.repeat_lengths)
     L_Norm_Tum = log_likelihood(normal_alleles.histogram, tumor_alleles, noise_table) # how well the tumor model explains normal histogram
@@ -76,8 +87,8 @@ def fisher_test(normal_alleles: AlleleSet, tumor_alleles: AlleleSet) -> float:
     return one_sided_fisher
 
 
-def call_decision(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array,
-                  LOR_ratio = 8.0, p_equal = 0.3, fisher_threshold = 0.031) -> MutationCall:
+def call_decision(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.ndarray,
+                  LOR_ratio = 8.0, p_equal = 0.3, fisher_threshold = 0.01) -> MutationCall:
     normal_allele_call = check_normal_alleles(normal_alleles, p_equal)
     if normal_allele_call != MutationCall.MUTATION:
         return MutationCall(normal_allele_call, normal_alleles, tumor_alleles, AICs())
@@ -85,14 +96,13 @@ def call_decision(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_tab
         return call_verified_locus(normal_alleles, tumor_alleles, noise_table, fisher_threshold, LOR_ratio)
 
 
-def equivalent_arrays(a: np.array, b: np.array) -> bool:
+def equivalent_arrays(a: np.ndarray, b: np.ndarray) -> bool:
     # returns whether arrays hold the same values in any value, is intended for integer arrays
     if len(a)!=len(b):
         return False
     a_sorted = np.sort(a.astype(np.int32))
     b_sorted = np.sort(b.astype(np.int32))
     return (a_sorted == b_sorted).all()
-
 
 
 def is_possible_mutation(normal_alleles: AlleleSet, p_equal = 0.3) -> bool:
@@ -114,39 +124,29 @@ def reconstruct_tumor_alleles_without_reference_length(tumor_alleles: AlleleSet,
         return new_tumor_alleles
 
 
-def reversion_to_reference_simple(tumor_alleles: AlleleSet) -> bool:
-    reference_length = int(tumor_alleles.histogram.locus.repeats)
-    return len(tumor_alleles.repeat_lengths)==1 and reference_length in tumor_alleles.repeat_lengths.astype(np.int32)
-
-
-def reversion_to_reference(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array,
-                           fisher_threshold = 0.031, LOR_ratio = 8.0) -> bool:
-    reference_length = normal_alleles.histogram.locus.repeats
-    if reference_length not in tumor_alleles.repeat_lengths:
-        return False
-    tumor_alleles_ref_removed = reconstruct_tumor_alleles_without_reference_length(tumor_alleles, noise_table)
-    if equivalent_arrays(normal_alleles.repeat_lengths, tumor_alleles_ref_removed.repeat_lengths):
-        return True
-    aic_values = calculate_AICs(normal_alleles, tumor_alleles_ref_removed, noise_table)
-    if passes_AICs(aic_values, LOR_ratio):
-        p_value = fisher_test(normal_alleles, tumor_alleles_ref_removed)
-        if p_value < fisher_threshold:
+def reversion_to_reference(normal_alleles: AlleleSet, tumor_alleles: AlleleSet) -> bool:
+    # returns whether a mutation candidate is actually a reversion to reference mutation
+    normal_alleles_set = set(normal_alleles.repeat_lengths)
+    normal_alleles_set.add(int(normal_alleles.histogram.locus.repeats)) # truncated
+    tumor_alleles_set = set(tumor_alleles.repeat_lengths)
+    for s in tumor_alleles_set:
+        if s not in normal_alleles_set: # the tumor has a unique allele
             return False
-        else:
-            return True
-    else:
-        return True
+    return True # every allele in the tumor allele set was either in the normal alleles or was in the reference
 
 
-def call_verified_locus(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array,
-                        fisher_threshold = 0.031, LOR_ratio = 8.0) -> MutationCall:
+def call_verified_locus(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.ndarray,
+                        fisher_threshold = 0.01, LOR_ratio = 8.0) -> MutationCall:
     # calls mutation for locus that has proper normal alleles and support
     aic_values = calculate_AICs(normal_alleles, tumor_alleles, noise_table)
     if passes_AICs(aic_values, LOR_ratio):
         p_value = fisher_test(normal_alleles, tumor_alleles)
         if p_value < fisher_threshold:
-            if reversion_to_reference(normal_alleles, tumor_alleles, noise_table, fisher_threshold, LOR_ratio):
+            if len(tumor_alleles) == 1:
+                return MutationCall(MutationCall.LOSS_OF_HETEROZYGOSITY, normal_alleles, tumor_alleles, aic_values, p_value)
+            elif reversion_to_reference(normal_alleles, tumor_alleles):
                 return MutationCall(MutationCall.REVERTED_TO_REFERENCE, normal_alleles, tumor_alleles, aic_values, p_value)
+            # we decided to count noisy alleles in the end
             # elif normal_alleles.histogram.is_noisy() or tumor_alleles.histogram.is_noisy():
             #     return MutationCall(MutationCall.GERMLINE_VARIATIONS, normal_alleles, tumor_alleles, aic_values, p_value)
             else: # everything looks mutated. not noisy. call mutation!
@@ -157,7 +157,7 @@ def call_verified_locus(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noi
         return MutationCall(MutationCall.NOT_MUTATION, normal_alleles, tumor_alleles, aic_values)
 
 
-def call_mutations(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.array) -> MutationCall:
+def call_mutations(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.ndarray) -> MutationCall:
     if len(normal_alleles) == 0 or len(tumor_alleles) == 0:
         return MutationCall(MutationCall.NO_ALLELES, normal_alleles, tumor_alleles, AICs())
     elif equivalent_arrays(normal_alleles.repeat_lengths, tumor_alleles.repeat_lengths):

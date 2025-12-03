@@ -1,5 +1,5 @@
 import argparse, sys, os, pysam
-from typing import List
+from typing import List, Callable
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -87,39 +87,50 @@ def validate_output_files(arguments: argparse.Namespace):
     overwrite_files_mssg = "Files would be overwritten by this run. To force overwrite, use -f flag"
     if os.path.sep not in arguments.output_prefix:
         arguments.output_prefix = os.path.join(os.getcwd(), arguments.output_prefix)
-    if not os.path.exists(os.path.dirname(arguments.output_prefix)):
+    output_prefix = arguments.output_prefix
+    if output_prefix.endswith(".tsv"):
+        exit_on("Provided prefix ends with '.tsv'. The provided prefix is meant to be a a prefix, not the full output file path")
+    if not os.path.exists(os.path.dirname(output_prefix)):
         exit_on("Output directory does not exist")
     if arguments.force:
         return
     elif arguments.single_file:
         if arguments.histogram and not arguments.allele:
-            if os.path.exists(arguments.output_prefix + ".hist.tsv"):
+            if os.path.exists(output_prefix + ".hist.tsv"):
                 exit_on(overwrite_files_mssg)
         else:
-            if os.path.exists(arguments.output_prefix + ".all.tsv"):
+            if os.path.exists(output_prefix + ".all.tsv"):
                 exit_on(overwrite_files_mssg)
     else:  # pair file
-        if arguments.mutation and arguments.vcf and os.path.exists(arguments.output_prefix+".vcf"):
+        if arguments.mutation and arguments.vcf and os.path.exists(output_prefix+".vcf"):
             exit_on(overwrite_files_mssg)
-        if (arguments.histogram or arguments.allele) and arguments.mutation and os.path.exists(arguments.output_prefix + ".full.mut.tsv"):
+        if (arguments.histogram or arguments.allele) and arguments.mutation and os.path.exists(output_prefix + ".full.mut.tsv"):
                     exit_on(overwrite_files_mssg)
-        elif not arguments.histogram and not arguments.allele and os.path.exists(arguments.output_prefix + ".partial.mut.tsv"):
+        elif not arguments.histogram and not arguments.allele and os.path.exists(output_prefix + ".partial.mut.tsv"):
                 exit_on(overwrite_files_mssg)
-        elif arguments.allele and (os.path.exists(arguments.output_prefix + ".tumor.all.tsv") or
-        os.path.exists(arguments.output_prefix + ".normal.all.tsv")):
+        elif arguments.allele and (os.path.exists(output_prefix + ".tumor.all.tsv") or
+        os.path.exists(output_prefix + ".normal.all.tsv")):
             exit_on(overwrite_files_mssg)
-        elif arguments.histogram and (os.path.exists(arguments.output_prefix + ".tumor.hist.tsv") or
-                                      os.path.exists(arguments.output_prefix + ".normal.hist.tsv")):
+        elif arguments.histogram and (os.path.exists(output_prefix + ".tumor.hist.tsv") or
+                                      os.path.exists(output_prefix + ".normal.hist.tsv")):
             exit_on(overwrite_files_mssg)
+
+
+def check_files(file_list: List[str], checking_function: Callable, template_error_message: str):
+    for file_path in file_list:
+        if not checking_function(file_path):
+            exit_on(f"Problem with {file_path}: {template_error_message}")
+
+
+def has_histogram_file_suffix(file_path: str) -> bool:
+    return file_path.endswith(".hist.tsv")
 
 
 def from_file_file_verification(arguments):
     if not (bool(arguments.tumor_file) and bool(arguments.normal_file)):
         exit_on("Provide both Normal and Tumor file for 'from_file' run")
-    if not os.path.exists(arguments.tumor_file) or not os.path.exists(arguments.normal_file):
-        exit_on("Provided Normal or Tumor BAM path does not exist")
-    if not arguments.tumor_file.endswith(".hist.tsv") or not arguments.normal_file.endswith(".hist.tsv"):
-        exit_on("'from_file' requires precompiled histograms")
+    check_files([arguments.tumor_file, arguments.normal_file], os.path.exists, "file does not exist")
+    check_files([arguments.tumor_file, arguments.normal_file], has_histogram_file_suffix, "file does not have proper suffix for a histogram file (.hist.tsv)")
 
 
 def validate_input(arguments: argparse.Namespace):
@@ -129,7 +140,7 @@ def validate_input(arguments: argparse.Namespace):
         validate_output_files(arguments)
         from_file_file_verification(arguments)
     else:
-        if not arguments.loci_file:
+        if not (arguments.loci_file or arguments.from_file): # there must be a source of loci; for from_file, this is the .hist.tsv files
             exit_on("Loci file must be provided")
         validate_bams(arguments)
         validate_output_files(arguments)
@@ -149,4 +160,3 @@ def validate_input(arguments: argparse.Namespace):
             exit_on("Loci file path does not exist")
         elif arguments.vcf and not arguments.mutation:
             exit_on("VCF file can only be generated for mutation calls")
-

@@ -4,10 +4,8 @@ from typing import Dict, List, Tuple
 from collections import defaultdict
 
 from pysam import AlignedSegment
-from scipy.special.cython_special import binom
 
 from src.Entry.FormatUtil import format_list
-from src.GenomicUtils.CigarOptions import CIGAR_OPTIONS
 from src.GenomicUtils.Mutation import Mutation
 from src.GenomicUtils.reference_locus_comparer import extract_locus_mutations, microsatellite_indel
 from src.IndelCalling.Locus import Locus

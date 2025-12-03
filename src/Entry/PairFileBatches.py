@@ -91,7 +91,6 @@ def partial_mutations_pair(loci: List[Locus], normal: str, tumor: str, flanking:
     if len(loci) != 0:
         normal_fetcher = ReadsFetcher(AlignmentFile(normal, "rb"), loci[0].chromosome)
         tumor_fetcher = ReadsFetcher(AlignmentFile(tumor, "rb"), loci[0].chromosome)
-        fisher = Fisher()
         for locus in loci:
             normal_alleles = get_alleles(locus, normal_fetcher, flanking, noise_table, required_reads)
             if is_possible_mutation(normal_alleles):
@@ -132,7 +131,6 @@ def construct_histogram_from_tsv(histogram_line: str) -> Histogram:
 
 def run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: int, required_reads: int, output_prefix: str):
     noise_table = get_noise_table()
-    fisher = Fisher()
     results_dir = os.path.dirname(output_prefix)
     mutation_calls = FileBackedQueue(out_file_dir=results_dir, max_memory=int(1e7))
     tumor_file = open(tumor_fp, 'r')

@@ -7,8 +7,8 @@ from src.IndelCalling.hist2vecs import hist2samps
 
 
 class MutationCall:
-    # pseudo enum
-    GERMLINE_VARIATIONS = -6
+    # pseudo enum. Not using real enums for backwards compatibility with obsolete python versions (biologists hate to update)
+    LOSS_OF_HETEROZYGOSITY = -6
     REVERTED_TO_REFERENCE = -5
     NO_ALLELES = -4
     BORDERLINE_NONMUTATION = -3
@@ -16,6 +16,7 @@ class MutationCall:
     INSUFFICIENT = -1
     NOT_MUTATION = 0
     MUTATION = 1
+
 
     def __init__(self, call: int, normal_alleles: AlleleSet, tumor_alleles: AlleleSet, aic_values: AICs, p_value=-1):
         self.call = call
@@ -32,7 +33,7 @@ class MutationCall:
 
     def call_abbreviation(self, call: int) -> str:
         abbreviations = {
-                         MutationCall.GERMLINE_VARIATIONS: "GV",
+                         MutationCall.LOSS_OF_HETEROZYGOSITY: "LOH",
                          MutationCall.REVERTED_TO_REFERENCE: "RR",
                          MutationCall.NO_ALLELES: "AN", # either tumor or normal lacks alleles
                          MutationCall.BORDERLINE_NONMUTATION: "FFT",  # failed fisher test
@@ -54,7 +55,7 @@ class MutationCall:
 
     @staticmethod
     def header():
-        return f"CALL\tFISHER_TEST_P_VALUE\t{AICs.header()}\tKS_TEST_PVALUE\tKS_TEST_STATISTIC"
+        return f"CALL\tFISHER_TEST_PVALUE\t{AICs.header()}\tKS_TEST_PVALUE\tKS_TEST_STATISTIC"
 
     def __str__(self):
         p_val, statistic = self.ks_test_value()

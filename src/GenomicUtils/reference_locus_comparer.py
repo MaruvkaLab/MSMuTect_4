@@ -7,7 +7,6 @@ from collections import namedtuple
 from pysam.libcvcf import defaultdict
 
 from src.GenomicUtils.CigarOptions import CIGAR_OPTIONS
-from src.GenomicUtils.Indel import Indel
 from src.GenomicUtils.Mutation import Mutation
 from src.GenomicUtils.md_cigar_parser import MD_OP, MD_TUPLE, read_md_ops_tuples
 

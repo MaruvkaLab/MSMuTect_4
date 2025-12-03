@@ -1,30 +1,17 @@
-FROM ubuntu:20.04
+FROM python:3.11-slim
 
-# Avoid interactive prompts (e.g., for tzdata)
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y python3.8 python3-pip samtools libbz2-dev liblzma-dev
-RUN ln -sf /usr/bin/python3.8 /usr/bin/python
-RUN ln -sf /usr/bin/pip3 /usr/bin/pip
-RUN mkdir MSMuTect4
+RUN apt-get update && apt-get install -y samtools gcc g++ libopenblas-dev liblapack-dev
 
-COPY ./src MSMuTect4/src
-COPY ./msmutect.sh MSMuTect4
-COPY ./msmutect.sh MSMuTect4
-COPY ./build.sh MSMuTect4
-COPY ./rename.sh MSMuTect4
-COPY ./setup.py MSMuTect4
-COPY ./requirements.txt MSMuTect4
-COPY ./LICENSE MSMuTect4
-#RUN cd MSMuTect4 && ls
-RUN cd MSMuTect4 && pip3 install -r requirements.txt && bash build.sh
 
+COPY . /MSMuTect4
+WORKDIR /MSMuTect4
+
+RUN pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+RUN python3 -c "import scipy"
+RUN bash build_cython.sh
 
 # Set working directory
-WORKDIR /app
 
-#RUN ls /
-#RUN ls /MSMuTect4/
-#RUN ls /MSMuTect4/msmutect.sh
-# Default command
 ENTRYPOINT ["/MSMuTect4/msmutect.sh"]

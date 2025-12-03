@@ -17,11 +17,11 @@ setup(
     long_description=f"{pathlib.Path(__file__).parent}/README.md",
     long_description_content_type="text/markdown",
     install_requires=['typing>=3.7.4.3',
-                        'numpy>=1.20.1',
-                        'pysam>=0.16.0.1',
-                        'scipy>=1.6.1',
-                        'setuptools>=54.1.1'
-                        ],
+                      'numpy>=1.20.1',
+                      'pysam>=0.16.0.1',
+                      'scipy>=1.6.1',
+                      'setuptools>=54.1.1'
+                      ],
 
     classifiers=[
         'Intended Audience :: Science/Research',

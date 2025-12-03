@@ -1,9 +1,10 @@
 # MSMuTect
-Indel, Allele and Mutation caller, specifically designed to call mutations in microsatellite regions using a pair of sequencing files (normal and tumor samples)
-
+Indel, Allele and Mutation caller, specifically designed to call mutations in microsatellite regions using a pair of sequencing files (normal and tumor samples). It can also be adapted for germline MSI analysis
 # Installation
-### Binary
-NOTE: The 4.1 version binary is not available on github. It is available on google drive:
+There are 3 possible ways to use MSMuTect: docker container, binary executable, and bash script. The docker container and bash script are around 15% faster than the executable. 
+
+## Binary
+NOTE: The 4.1 version binary is not available on github yet. It is available on google drive:
 https://drive.google.com/file/d/11a7EwXuZp-dKR6O7e09a6V5UB7Lq_g6K/view?usp=drive_link   
 When the bleeding branch moves to main, we will upload the 4.1 binary to github
 
@@ -11,13 +12,29 @@ There is a prebuilt x86_64 linux binary available in releases.
 Note: The binary is slightly slower than the 'Local' option.   
 Download the binary from the following link:
 [fill in link]
-### Local
-If on a different platform, or to achieve maximum performance (~25% faster than the binary), do the following:  
+
+## Docker
+To build:   
+docker build -t msmutect-docker .
+To run:  
+docker run --rm -it msmutect-docker [flags]
+
+
+
+## Bash Script
+If on a different platform, or to achieve maximum performance (~15% faster than the binary), do the following:  
 git clone https://github.com/MaruvkaLab/MSMuTect_4  
 cd MSMuTect_4  
 pip3 install -r requirements.txt  
-bash build.sh  #optional; improves performance  
+bash build_cython.sh  #optional; improves performance. Otherwise, this is the slowest option
 When running, use MSMuTect_4/msmutect.sh everywhere the documentation says 'msmutect'
+
+### Windows Users
+MSMuTect cannot run on Windows without WSL because one of MSMuTect's 
+dependencies (pysam) is linux-only. While there are replacements for pysam, they are not
+considered as mature and stable as pysam. Windows users can use WSL to run
+MSMuTect, although this will incur a significant performance hit if the files are
+under C:/ (/mnt/c) due to WSL's translation layer
 
 # A Note About Versions
 The versions are very confused due to a discontinuous history of development. Practically speaking
@@ -60,7 +77,7 @@ msmutect --from_file -l [loci_file.phobos]  -N [normal.hist.tsv] -T [tumor.hist.
 
 To see all flags, such as changing parameters, outputting vcf files, etc., run 'msmutect --help'
 
-MSMuTect will create temporary files when running, with names like .tmp_10242_1721809243.1243694_25529.  
+MSMuTect will create temporary files when running, with names like .msmutect_tmp_file_10242_1721809243.1243694_25529.  
 It deletes them at the end. If, for some reason, msmutect is interrupted, these files will not be deleted. They can be safely removed 
 
 ### Understanding the 'Call' Column
@@ -68,7 +85,7 @@ M = Mutation
 NM = Not Mutation  
 AN = No Alleles. Either the tumor sample or the normal sample lacks alleles  
 RR = Reversion to Reference. The normal sample held an alternative allele, and the tumor had a mutation of the reference allele  
-GV = Germline Variation. There are too many SNPs in the vicinity of the locus to confidently say that the indels were of the MS motif  
+LOH = Loss of Heterozygosity. Tumor has only 1 allele  
 FFT = Failed Fisher Test. Passed other tests to be called a mutation, but failed the Fisher's exact test of significance      
 INS = Insufficient Support. The normal sample has multiple alleles, but one of them has insufficient support, indicating a noisy locus  
 TMA = Too Many Alleles. Normal sample has too many alleles, and hence the locus is too noisy to call    
@@ -89,18 +106,15 @@ For questions, suggestions, or concerns, open an issue on github or email k.avra
 
 # Changes, Pull Requests, and Compiling the Binary Executable (not relevant for most users)
 Users should typically install MSMuTect as described in the "Installation" section. However, if you 
-wish to make changes, this is also practicable. The code is straightforward and the entry point is in src/Entry/main.py.  
-When making changes, you don't need to recompile the code every time: simply don't run build.sh and msmutect.sh will use the python files directly.  
+wish to make changes, this is also practicable. The code is straightforward and the entry point is in src/Entry/main.py.
+There is a test suite in tests.
+When making changes, you don't need to recompile the code every time: simply don't run build_cython.sh and msmutect.sh will use the python files directly.  
 If you add any interesting features, we would be grateful if you could share them with us by emailing us or opening a pull request.  
-If you did run build.sh and want to revert the .pyx files to python files, run reverse_rename.sh.   
-If for some reason you would like to compile a binary executable, this is a little tricky and not recommended. The most important thing 
-to understand is that there are two levels of compilation:  
-1. Compiling every individual module. This is purely to improve performance. It is not necessary for running msmutect.sh, but it is necessary to create
-binary executable
-2. Compiling the binary executable so that it can be run by itself.  
+If you did run build_cython.sh and want to revert the .pyx files to python files, run reverse_rename.sh. Please ensure 
+you erase the previously generated shared-object libraries, or the python interpreter will use those instead of the .py files
+If for some reason you would like to compile a binary executable, this is a little tricky and not recommended.
+Specifically, pyinstaller can be picky regarding the exact python and system libraries present on the system
 
 The steps to create the binary executable are as follows:   
 1. Create a python virtual environment with all of the dependencies in requirements.txt and pyinstaller
-2. Run build.sh to compile the individual python modules
-3. Update the paths in pyinstaller_build/build.sh (Note this is different than the top level build.sh)
-4. Run pyinstaller_build/build.sh. The resulting executable will be put in pyinstaller_build/dist
+2. Run create_executable.sh
