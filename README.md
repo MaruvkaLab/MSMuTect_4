@@ -15,9 +15,12 @@ Download the binary from the following link:
 
 ## Docker
 To build:   
-docker build -t msmutect-docker .
+docker build -t msmutect-docker .   
 To run:  
-docker run --rm -it msmutect-docker [flags]
+docker run --rm -it msmutect-docker [flags]  
+It is necessary to mount the directories of the input and output files so the msmutect docker can access them. 
+Here is an example:  
+docker run -v /home/avraham/locus_file/:/locus_file -v /home/avraham/data/:/bam_files -v .:/output --rm -it msmutect-docker -l /locus_file/GRCh38.d1.vd1_1to15_repetitive_loci_sorted_fixed -T /bam_files/tumor.bam -N /bam_files/normal.bam -O /output/docker_test -c 64 -m -A -H
 
 
 
