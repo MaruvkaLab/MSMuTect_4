@@ -1,9 +1,28 @@
 # cython: language_level=3
-from typing import List
+import pysam
+from typing import List, Optional
 from pysam import AlignmentFile, AlignedSegment
 from pysam.libcalignmentfile import IteratorRowRegion
 
 from src.GenomicUtils.AlignmentFlags import FLAG_OPTIONS
+
+
+def open_alignment_file(path: str, reference: Optional[str] = None) -> AlignmentFile:
+    """
+    Open a BAM or CRAM file with pysam.
+
+    CRAM is reference-based, so the reference genome is required to decode its
+    records and is passed through to pysam. BAM is self-contained, so the
+    reference is ignored for .bam files.
+    """
+    if path.endswith(".cram"):
+        return pysam.AlignmentFile(path, reference_filename=reference)
+    elif path.endswith(".bam"):
+        # BAM is self-contained; the reference is ignored.
+        return pysam.AlignmentFile(path)
+    else: # should never happen
+        raise RuntimeError(f"Unrecognized file type: {path}. This error should not happen. Please report this error to the developers.")
+
 
 
 class ReadsFetcher:
@@ -12,8 +31,8 @@ class ReadsFetcher:
     ReadsFetcher stores what it last returned to a query, and checks these results for candidates for the current query
     It can miss reads if the loci file is improperly sorted. These parts of the program are fairly tightly coupled, unfortunately
     """
-    def __init__(self, BAM_handle: AlignmentFile, start_chromosome: str):
-        self.BAM_handle = BAM_handle
+    def __init__(self, alignment_file: str, start_chromosome: str, reference_genome_file: Optional[str] = None):
+        self.BAM_handle = open_alignment_file(alignment_file, reference=reference_genome_file)
         self.chromosome = start_chromosome
         self.chromosome_prefix = self.get_prefix()
         self.last_extracted_reads = []

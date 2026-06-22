@@ -2,7 +2,7 @@
 # cython: language_level=3
 
 import os
-from typing import List
+from typing import List, Optional
 from pysam import AlignmentFile
 
 from src.GenomicUtils.LocusFile import LociManager
@@ -20,24 +20,23 @@ def format_alleles(alleles: AlleleSet) -> str: # List[AlleleSet] not declared to
     return f"{alleles.histogram.locus}\t{str(alleles.histogram)}\t{str(alleles)}"
 
 
-def run_single_allelic(BAM: str, loci_file: str, batch_start: int,
-                       batch_end: int, cores: int, flanking: int, required_reads: int, output_prefix: str) -> None:
+def run_single_allelic(BAM: str, reference_genome_file: str, loci_file: str, batch_start: int,
+                       batch_end: int, cores: int, flanking: int, required_reads: int, imprecise_mode, output_prefix: str) -> None:
     loci_iterator = LociManager(loci_file, batch_start)
     noise_table = get_noise_table()
-    results = BatchUtil.run_batch(partial_single_allelic, [BAM, flanking, noise_table, required_reads],
+    results = BatchUtil.run_batch(partial_single_allelic, [BAM, reference_genome_file, flanking, noise_table, required_reads, imprecise_mode,],
                                                            loci_iterator,  (batch_end - batch_start), cores, os.path.dirname(output_prefix))
     header = f"{Locus.header()}\t{Histogram.header()}\t{AlleleSet.header()}"
     BatchUtil.write_queues_results(output_prefix + ".all", results, header)
 
 
-def partial_single_allelic(loci: List[Locus], BAM: str, flanking: int, noise_table, required_reads: int,
-                           results_dir: str) -> FileBackedQueue:
+def partial_single_allelic(loci: List[Locus], BAM: str, reference_genome_file: str, flanking: int, noise_table,
+                           required_reads: int, imprecise_mode: bool, results_dir: str) -> FileBackedQueue:
     allelic_results = FileBackedQueue(out_file_dir=results_dir, max_memory=10**7) # 10MB
-    BAM_handle = AlignmentFile(BAM, "rb")
     if len(loci) != 0:
-        reads_fetcher = ReadsFetcher(BAM_handle, loci[0].chromosome)
+        reads_fetcher = ReadsFetcher(BAM, loci[0].chromosome, reference_genome_file)
         for locus in loci:
-            current_histogram = Histogram(locus)
+            current_histogram = Histogram(locus, imprecise_mode)
             reads = reads_fetcher.get_reads(locus.chromosome, locus.start - flanking, locus.end + flanking)
             current_histogram.add_reads(reads)
             current_alleles = calculate_alleles(current_histogram, noise_table, required_read_support=required_reads)
@@ -46,10 +45,10 @@ def partial_single_allelic(loci: List[Locus], BAM: str, flanking: int, noise_tab
     return allelic_results
 
 
-def run_single_histogram(BAM: str, loci_file: str, batch_start: int,
-                         batch_end: int, cores: int, flanking: int, output_prefix: str) -> None:
+def run_single_histogram(BAM: str, reference_genome_file: str, loci_file: str, batch_start: int,
+                         batch_end: int, cores: int, flanking: int, imprecise_mode: bool, output_prefix: str) -> None:
     loci_iterator = LociManager(loci_file, batch_start)
-    results = BatchUtil.run_batch(partial_single_histogram, [BAM, flanking], loci_iterator,
+    results = BatchUtil.run_batch(partial_single_histogram, [BAM, reference_genome_file, flanking, imprecise_mode], loci_iterator,
                                   (batch_end - batch_start), cores, os.path.dirname(output_prefix))
     header = f"{Locus.header()}\t{Histogram.header()}"
     BatchUtil.write_queues_results(output_prefix + ".hist", results, header)
@@ -59,13 +58,13 @@ def format_histogram(histogram: Histogram) -> str:
     return f"{str(histogram.locus)}\t{str(histogram)}"
 
 
-def partial_single_histogram(loci: List[Locus], BAM: str, flanking: int, results_dir: str) -> FileBackedQueue:
+def partial_single_histogram(loci: List[Locus], BAM: str, reference_genome_file: str, flanking: int,
+                             imprecise_mode: bool, results_dir: str) -> FileBackedQueue:
     histograms = FileBackedQueue(out_file_dir=results_dir, max_memory=10**7)  # 10MB
-    BAM_handle = AlignmentFile(BAM, "rb")
     if len(loci) != 0:
-        reads_fetcher = ReadsFetcher(BAM_handle, loci[0].chromosome)
+        reads_fetcher = ReadsFetcher(BAM, loci[0].chromosome, reference_genome_file)
         for locus in loci:
-            current_histogram = Histogram(locus)
+            current_histogram = Histogram(locus, imprecise_mode)
             reads = reads_fetcher.get_reads(locus.chromosome, locus.start - flanking, locus.end + flanking)
             current_histogram.add_reads(reads)
             histograms.append(format_histogram(current_histogram))

@@ -20,8 +20,11 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("-F", "--flanking", help="Length of flanking on both sides of an accepted read", type=int, default=10)
     parser.add_argument("-r", "--read_level", help="Minimum number of reads to call allele", type=int, default=5)
     parser.add_argument("-f", "--force", help="Overwrite pre-existing files", action='store_true')
-    parser.add_argument("--vcf", help="Output VCF file in addition to TSV file. IMPORTANT NOTE: the location of the indel may be anywhere in the locus, but the VCF will always have it at the beginning of the locus. In addition, all loci with non-reference alleles are listed but only mutations are listed as 'PASS'", action='store_true')
+    parser.add_argument("--imprecise_mode", help="Avoids doing full local realignment against motif. Is much faster, but less precise, particularly for long motifs in impure loci", action='store_true')
+    parser.add_argument("--reference_genome_file", help="If using CRAM files, you must provide a reference genome")
     parser.add_argument("--from_file", help="call alleles mutations on previously called indels (histograms). Only single core runs are supported", action='store_true')
+    parser.add_argument("--vcf", help="Output VCF file in addition to TSV file. IMPORTANT NOTE: the location of the indel may be anywhere in the locus, but the VCF will always have it at the beginning of the locus. In addition, all loci with non-reference alleles are listed but only mutations are listed as 'PASS'", action='store_true')
+
     return parser
 
 
@@ -32,44 +35,71 @@ def exit_on(message: str, status: int = 1):
 
 
 def simple_index_check(bam: str):
-    bam_bai_path = bam + ".bai"
-    bai_path = bam[:-4] + ".bai"
-    bam_bai_file_exists = os.path.exists(bam_bai_path)
-    bai_file_exists = os.path.exists(bai_path)
-    index_file_older_than_bam_message = f"Index file older than BAM file for {bam}. Index file must be younger than BAM file. If you are sure the index file is correct, run 'touch [index_file]'"
-    if bam_bai_file_exists:
-        if os.path.getmtime(bam_bai_path) < os.path.getmtime(bam):
+    # Pick the right index extension and strip the correct file extension.
+    if bam.endswith(".cram"):
+        index_ext = ".crai"
+        stem = bam[:-5]
+    elif bam.endswith(".bam"):
+        index_ext = ".bai"
+        stem = bam[:-4]
+    else:
+        exit_on(f"Given file {bam} is not a .bam or .cram file")
+
+    # Two accepted index naming conventions:
+    #   samtools default:  file.bam.bai  / file.cram.crai
+    #   alternative:       file.bai      / file.crai
+    appended_index_path = bam + index_ext      # e.g. sample.bam.bai
+    replaced_index_path = stem + index_ext     # e.g. sample.bai
+    appended_file_exists = os.path.exists(appended_index_path)
+    replaced_file_exists = os.path.exists(replaced_index_path)
+    index_file_older_than_bam_message = f"Index file older than alignment file for {bam}. Index file must be younger than the alignment file. If you are sure the index file is correct, run 'touch [index_file]'"
+    if appended_file_exists:
+        if os.path.getmtime(appended_index_path) < os.path.getmtime(bam):
             exit_on(index_file_older_than_bam_message)
-    elif bai_file_exists:
-        if os.path.getmtime(bai_path) < os.path.getmtime(bam):
+    elif replaced_file_exists:
+        if os.path.getmtime(replaced_index_path) < os.path.getmtime(bam):
             exit_on(index_file_older_than_bam_message)
     else:
-        exit_on(f"Given BAM file {bam} is not sorted and/or indexed")
+        exit_on(f"Given file {bam} is not sorted and/or indexed")
 
 
 def validate_indexing(bam_files: List[str]) -> None:
-    """ validates that given BAM files are indexed"""
+    """ validates that given sequence files (BAM or CRAM) are indexed"""
     prefixes = ['', 'chr', 'Chr']
     for bam in bam_files:
-        simple_index_check(bam) # simply checks for .bai file
+        simple_index_check(bam)  # checks for the .bai / .crai file
         validated = False
         try:
-            current_handle = pysam.AlignmentFile(open(bam, 'rb'))
+            # Passing the path lets pysam auto-detect BAM vs CRAM from the file's
+            # magic bytes (it opens CRAM in 'rc' mode automatically).
+            current_handle = pysam.AlignmentFile(bam)
         except OSError:  # file was incomplete
             exit_on(f"{bam} or it's index file is incomplete")
-
         for prefix in prefixes:
             try:
+                # CRAM file does not actually need reference file since it does not consume records
                 _ = current_handle.fetch(f"{prefix}{1}", start=10_000, multiple_iterators=False)
                 validated = True
                 break  # verified
             except ValueError:  # different prefix, or not indexed
                 continue
         if not validated:
-            exit_on(f"Given BAM file {bam} is not sorted and/or indexed, or contain an unsusual prefix (not 'chr', 'Chr', or nothing)")
+            exit_on(f"Given file {bam} is not sorted and/or indexed, or contains an unusual prefix (not 'chr', 'Chr', or nothing)")
+
 
 
 def validate_bams(arguments: argparse.Namespace):
+    for f in [arguments.normal_file, arguments.tumor_file, arguments.single_file]:
+        if not (f is None):
+            if not os.path.exists(f):
+                exit_on(f"Given sequencing file {f} does not exist")
+            if not (f.endswith(".bam") or f.endswith(".cram")):
+                exit_on(f"Given sequencing file {f} is not a BAM or CRAM file")
+            if f.endswith(".cram"):
+                if (arguments.reference_genome_file is None):
+                    exit_on(f"When using CRAM files, you must provide a reference genome file")
+                elif (not os.path.exists(arguments.reference_genome_file)):
+                    exit_on(f"Given reference genome file {arguments.reference_genome_file} does not exist")
     if (bool(arguments.tumor_file) or bool(arguments.normal_file)) == bool(arguments.single_file): #  XOR
         exit_on("Provide Single file, or both Normal and Tumor file")
     elif bool(arguments.tumor_file) != bool(arguments.normal_file): #  XOR

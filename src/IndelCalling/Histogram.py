@@ -6,6 +6,7 @@ from collections import defaultdict
 from pysam import AlignedSegment
 
 from src.Entry.FormatUtil import format_list
+from src.GenomicUtils.CigarOptions import CIGAR_OPTIONS
 from src.GenomicUtils.Mutation import Mutation
 from src.GenomicUtils.reference_locus_comparer import extract_locus_mutations, microsatellite_indel
 from src.IndelCalling.Locus import Locus
@@ -32,7 +33,10 @@ from src.IndelCalling.Locus import Locus
 #         retur
 
 class Histogram:
-    def __init__(self, locus: Locus):
+    def __init__(self, locus: Locus, imprecise_mode: bool = False):
+        # imprecise mode means not to do a full local realignment against the actual motif
+        # It's much faster, but less accurate, especially for long motifs and in impure loci
+        self.imprecise_mode = imprecise_mode
         self.locus = locus
         self.repeat_lengths = defaultdict(int)  # key = repeat length; value = supporting reads
         self.noise_dict = defaultdict(int)
@@ -71,9 +75,33 @@ class Histogram:
         else: # matches reference
             self.repeat_lengths[int(self.locus.repeats)]+=1
 
+    def add_read_to_repeat_length_dict_efficient(self, read: AlignedSegment) -> float:
+        # "old_mode": much faster, but also less accurate for longer motifs
+        read_position = read.reference_start+1
+        indel_bases = 0 # number of added/deleted bases in MS locus
+        for cigar_op in read.cigartuples:
+
+            if cigar_op[0] in [CIGAR_OPTIONS.ALG_MATCH, CIGAR_OPTIONS.SEQ_MATCH, CIGAR_OPTIONS.SEQ_MISMATCH]:
+                read_position += cigar_op[1]
+            elif cigar_op[0] == CIGAR_OPTIONS.INSERTION:
+                if self.locus.start <= read_position <= self.locus.end:
+                    indel_bases += cigar_op[1]
+            elif cigar_op[0] == CIGAR_OPTIONS.DELETION:
+                if read_position <= self.locus.end:
+                    if read_position < self.locus.start:
+                        deletion_length = max(cigar_op[1] + read_position - self.locus.start, 0)
+                    else:
+                        deletion_length = cigar_op[1]
+                    indel_bases-=min(self.locus.end-read_position+1, deletion_length)
+                read_position+=cigar_op[1]
+        self.repeat_lengths[round(max(self.locus.repeats + indel_bases/len(self.locus.pattern), 0))]+=1 # so is never negative
+
     def add_reads(self, reads: List[AlignedSegment]) -> None:
         for read in reads:
-            self.add_read_to_repeat_length_dict(read)
+            if self.imprecise_mode:
+                self.add_read_to_repeat_length_dict_efficient(read)
+            else: # default
+                self.add_read_to_repeat_length_dict(read)
 
 
     def determine_if_locus_is_noisy(self):

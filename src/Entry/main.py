@@ -28,30 +28,30 @@ def run_msmutect(args: argparse.Namespace):
             batch_end = count_lines(args.loci_file)
         if args.single_file:
             if args.allele or not args.histogram:
-                run_single_allelic(args.single_file, args.loci_file, args.batch_start - 1,
-                                   batch_end, args.cores, args.flanking, args.read_level, args.output_prefix)
+                run_single_allelic(args.single_file, args.reference_genome_file, args.loci_file, args.batch_start - 1,
+                                   batch_end, args.cores, args.flanking, args.read_level, args.imprecise_mode, args.output_prefix)
             else:
-                run_single_histogram(args.single_file, args.loci_file, args.batch_start - 1,
-                                     batch_end, args.cores, args.flanking, args.output_prefix)
+                run_single_histogram(args.single_file, args.reference_genome_file, args.loci_file, args.batch_start - 1,
+                                     batch_end, args.cores, args.flanking, args.imprecise_mode, args.output_prefix)
 
         else:
             if args.histogram and not args.mutation:
-                run_single_histogram(args.normal_file, args.loci_file, args.batch_start - 1,
-                                     batch_end, args.cores, args.flanking, args.output_prefix + ".normal")
-                run_single_histogram(args.tumor_file, args.loci_file, args.batch_start - 1,
-                                     batch_end, args.cores, args.flanking, args.output_prefix + ".tumor")
+                run_single_histogram(args.normal_file, args.reference_genome_file, args.loci_file, args.batch_start - 1,
+                                     batch_end, args.cores, args.flanking, args.imprecise_mode, args.output_prefix + ".normal")
+                run_single_histogram(args.tumor_file, args.reference_genome_file, args.loci_file, args.batch_start - 1,
+                                     batch_end, args.cores, args.flanking, args.imprecise_mode, args.output_prefix + ".tumor")
             elif args.allele and not args.mutation:
-                run_single_allelic(args.normal_file, args.loci_file, args.batch_start - 1,
-                                   batch_end, args.cores, args.flanking, args.read_level, args.output_prefix + ".normal")
-                run_single_allelic(args.tumor_file, args.loci_file, args.batch_start - 1,
-                                   batch_end, args.cores, args.flanking, args.read_level, args.output_prefix + ".tumor")
+                run_single_allelic(args.normal_file, args.reference_genome_file, args.loci_file, args.batch_start - 1,
+                                   batch_end, args.cores, args.flanking, args.read_level, args.imprecise_mode, args.output_prefix + ".normal")
+                run_single_allelic(args.tumor_file, args.reference_genome_file, args.loci_file, args.batch_start - 1,
+                                   batch_end, args.cores, args.flanking, args.read_level, args.imprecise_mode, args.output_prefix + ".tumor")
             else: # args.mutation=True
                 if args.histogram or args.allele:
-                    mut_file = run_full_pair(args.normal_file, args.tumor_file, args.loci_file, args.batch_start-1, batch_end,
-                                  args.cores, args.flanking, args.read_level, args.output_prefix)
+                    mut_file = run_full_pair(args.normal_file, args.tumor_file, args.reference_genome_file, args.loci_file, args.batch_start-1, batch_end,
+                                  args.cores, args.flanking, args.read_level, args.imprecise_mode, args.output_prefix)
 
                 else:  # args.mutation=True, just mutations
-                    mut_file = run_mutations_pair(args.normal_file, args.tumor_file, args.loci_file, args.batch_start-1, batch_end,
+                    mut_file = run_mutations_pair(args.normal_file, args.tumor_file, args.reference_genome_file, args.loci_file, args.batch_start-1, batch_end,
                                     args.cores, args.flanking, args.read_level, args.output_prefix)
                 if args.vcf:
                     convert_tsv_to_vcf(mut_file, args.output_prefix+".vcf")

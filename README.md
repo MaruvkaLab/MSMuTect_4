@@ -62,6 +62,7 @@ appears on the forward strand. You can do this with ./tests/scratch/post_process
 ## Running the Software
 
 msmutect [flags]
+You can also run MSMuTect on CRAM files. To do so, you must also supply the --reference_genome_file flag
   
 To fully analyze all loci:  
 msmutect -T [tumor_bam.bam] -N [normalbam.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -m -A -H  
