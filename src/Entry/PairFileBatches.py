@@ -122,7 +122,7 @@ def construct_histogram_from_tsv(histogram_line: str) -> Histogram:
         if broken_line[i].strip() == "NA":
             break
         else:
-            motif_repeat_support.append(int(broken_line[i]))
+            motif_repeat_support.append(int(float(broken_line[i])))
     locus = Locus(chromosome, start, end, pattern, num_ref_repeats, ref_seq)
     repeat_dict = defaultdict(int)
     for repeat_length, support in zip(motif_repeats, motif_repeat_support):
@@ -149,7 +149,9 @@ def run_from_file(tumor_fp: str, normal_fp: str, batch_start: int, batch_end: in
             tumor_histogram = construct_histogram_from_tsv(tumor_file.readline())
         except StopIteration:
             break # finished consuming file. batch end could be malformed
+
         normal_histogram = construct_histogram_from_tsv(normal_file.readline())
+
         tumor_alleles = CallAllelesFast.calculate_alleles(tumor_histogram, noise_table, required_read_support=required_reads)
         normal_alleles = CallAllelesFast.calculate_alleles(normal_histogram, noise_table, required_read_support=required_reads)
         mutation_calls.append(format_mutation_call(call_mutations(normal_alleles, tumor_alleles, noise_table)))
@@ -175,9 +177,14 @@ if __name__ == '__main__':
     # normal_fp = "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/MSMuTect_normal_hist_to_run.normal.hist.tsv"
     # run_from_file(tumor_fp, normal_fp, 0, 10, 5, "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/res/croc")
 
-    tumor_fp = "/media/avraham/all_qs_data/tmp/0299c399-f301-444a-b7c4-57fa96ef5e2f.hist.tsv"
-    normal_fp = "/media/avraham/all_qs_data/tmp/0148fc66-05c6-489c-af47-26d12cbd898d.hist.tsv"
-    run_from_file(tumor_fp, normal_fp, 0, 1000, 5, "/home/avraham/MaruvkaLab/msmutect_runs/gaia_from_file/res/croc")
+    # tumor_fp = "/media/avraham/all_qs_data/tmp/0299c399-f301-444a-b7c4-57fa96ef5e2f.hist.tsv"
+    # normal_fp = "/media/avraham/all_qs_data/tmp/0148fc66-05c6-489c-af47-26d12cbd898d.hist.tsv"
+
+    tumor_fp = "/home/avraham/MaruvkaLab/msmutect_development/features/from_file_confirmation/tumor.hist.tsv"
+    normal_fp = "/home/avraham/MaruvkaLab/msmutect_development/features/from_file_confirmation/normal.hist.tsv"
+
+    run_from_file(tumor_fp, normal_fp, 0, 2000, 5,
+                  "/home/avraham/MaruvkaLab/msmutect_development/features/from_file_confirmation/ff")
     # print(  f"{Locus.header()}\t{Histogram.header(prefix='NORMAL_')}\t{AlleleSet.header(prefix='NORMAL_')}\t{Histogram.header(prefix='TUMOR_')}\t{AlleleSet.header(prefix='TUMOR_')}\t{MutationCall.header()}")
 # )
 #     run_mutations_pair("/home/avraham/MaruvkaLab/Texas/texas_stad_run/tst/098698a0-3107-49e3-9226-d6d105f195a1.hist.tsv",

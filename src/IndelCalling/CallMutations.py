@@ -25,10 +25,11 @@ def cdf_test(first_allele_reads: int, second_allele_reads: int, p_equal: float =
 def proper_normal_alleles_reads_distribution(normal_alleles: AlleleSet, required_level_of_read_support: int = 10):
     # 90% of normal reads must map to the first 2 repeat lengths and 10 total reads are required
     read_supports = list(normal_alleles.histogram.rounded_repeat_lengths.values())
-    read_supports_sorted = list(sorted(read_supports))
+    read_supports_sorted = list(sorted(read_supports, reverse=True))
     total_reads = sum(read_supports_sorted)
     first_2_alleles_support = sum(read_supports_sorted[:2])
-    return (first_2_alleles_support/total_reads >= 0.9) and (total_reads>=required_level_of_read_support)
+    ret = (first_2_alleles_support/total_reads >= 0.9) and (total_reads>=required_level_of_read_support)
+    return ret
 
 
 def check_normal_alleles(normal_alleles: AlleleSet, p_equal=0.3) -> int:
@@ -89,6 +90,8 @@ def fisher_test(normal_alleles: AlleleSet, tumor_alleles: AlleleSet) -> float:
 
 def call_decision(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.ndarray,
                   LOR_ratio = 8.0, p_equal = 0.3, fisher_threshold = 0.01) -> MutationCall:
+    if normal_alleles.histogram.locus.start == 64623402:
+        croc = 1
     normal_allele_call = check_normal_alleles(normal_alleles, p_equal)
     if normal_allele_call != MutationCall.MUTATION:
         return MutationCall(normal_allele_call, normal_alleles, tumor_alleles, AICs())
