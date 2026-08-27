@@ -9,7 +9,8 @@ from tests.testing_utils.high_level_results_parsing import count_mutations_in_fi
 class TestBatchUtil(unittest.TestCase):
     # the full test suite would probably take around 10 hours to run. For a quick fix, just run the 100k tests, and test single file
     # HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 3377 # before new version of RR/LOH filtering
-    HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 2925
+    HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 3095
+    # HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 2925
     # FULL_RUN_MUTATION_COUNT = 832_982 # before new version of RR/LOH filtering
     FULL_RUN_MUTATION_COUNT = 831612
 

@@ -90,8 +90,6 @@ def fisher_test(normal_alleles: AlleleSet, tumor_alleles: AlleleSet) -> float:
 
 def call_decision(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_table: np.ndarray,
                   LOR_ratio = 8.0, p_equal = 0.3, fisher_threshold = 0.01) -> MutationCall:
-    if normal_alleles.histogram.locus.start == 64623402:
-        croc = 1
     normal_allele_call = check_normal_alleles(normal_alleles, p_equal)
     if normal_allele_call != MutationCall.MUTATION:
         return MutationCall(normal_allele_call, normal_alleles, tumor_alleles, AICs())
