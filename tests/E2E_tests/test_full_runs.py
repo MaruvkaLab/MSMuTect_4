@@ -9,10 +9,10 @@ from tests.testing_utils.high_level_results_parsing import count_mutations_in_fi
 class TestBatchUtil(unittest.TestCase):
     # the full test suite would probably take around 10 hours to run. For a quick fix, just run the 100k tests, and test single file
     # HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 3377 # before new version of RR/LOH filtering
-    HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 3095
+    HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 3187
     # HUNDRED_THOUSAND_LOCI_MUTATION_COUNT = 2925
     # FULL_RUN_MUTATION_COUNT = 832_982 # before new version of RR/LOH filtering
-    FULL_RUN_MUTATION_COUNT = 831612
+    FULL_RUN_MUTATION_COUNT = 756_915
 
     # def test_from_file_100k_loci(self):
     #     arguments = CMDArguments(EXECUTION_TYPE.BASH, STAGE.HISTOGRAMS, STAGE.MUTATIONS_FULL, num_loci=100_000, num_cores=1)
@@ -45,6 +45,12 @@ class TestBatchUtil(unittest.TestCase):
     def test_100k_loci_bash_full(self):
         arguments = CMDArguments(EXECUTION_TYPE.BASH, STAGE.BAMS, STAGE.MUTATIONS_FULL, num_loci=100_000)
         self.run_full_msmutect(arguments, self.HUNDRED_THOUSAND_LOCI_MUTATION_COUNT)
+
+
+    def test_100k_loci_bash_efficient(self):
+        arguments = CMDArguments(EXECUTION_TYPE.BASH, STAGE.BAMS, STAGE.MUTATIONS_EFFICIENT, num_loci=100_000)
+        self.run_full_msmutect(arguments, self.HUNDRED_THOUSAND_LOCI_MUTATION_COUNT)
+
     #
     # def test_100k_loci_docker_efficient(self):
     #     arguments = CMDArguments(EXECUTION_TYPE.DOCKER, STAGE.BAMS, STAGE.MUTATIONS_EFFICIENT, num_loci=100_000)
@@ -55,9 +61,7 @@ class TestBatchUtil(unittest.TestCase):
     #     arguments = CMDArguments(EXECUTION_TYPE.EXECUTABLE, STAGE.BAMS, STAGE.MUTATIONS_EFFICIENT, num_loci=100_000)
     #     self.run_full_msmutect(arguments, self.HUNDRED_THOUSAND_LOCI_MUTATION_COUNT)
     # #
-    # def test_100k_loci_bash_efficient(self):
-    #     arguments = CMDArguments(EXECUTION_TYPE.BASH, STAGE.BAMS, STAGE.MUTATIONS_EFFICIENT, num_loci=100_000)
-    #     self.run_full_msmutect(arguments, self.HUNDRED_THOUSAND_LOCI_MUTATION_COUNT)
+
 
     def run_full_single_file(self, arguments: CMDArguments, remove: bool = True):
         self.run_command(arguments.command)
@@ -66,6 +70,7 @@ class TestBatchUtil(unittest.TestCase):
             os.remove(arguments.local_output_file)
 
     def run_full_msmutect(self, arguments: CMDArguments, true_mutation_count: int, remove: bool = True):
+        print(arguments.command)
         self.run_command(arguments.command)
         self.assert_correct_mutation_count(arguments.local_output_file, true_mutation_count)
         if remove:

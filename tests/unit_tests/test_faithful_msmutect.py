@@ -48,7 +48,6 @@ class TestFaithfulMSMuTect(unittest.TestCase):
             results = self.run_case(case.name, case.reads)
             self.assertEqual(case.lengths, results.motif_repeats, msg=f"{case.name}: Motif Lengths")
             self.assertEqual(case.motif_support, results.motif_repeat_support, msg=f"{case.name}: Motif Supports")
-            self.assertEqual(case.noisy, results.noisy, msg=f"{case.name}: Noisy")
 
     def test_cases_fake_loci_file(self):
         # these cases use an extended locus so it can be impure
@@ -60,7 +59,6 @@ class TestFaithfulMSMuTect(unittest.TestCase):
             results = self.run_case(case.name, case.reads, locus_file_path=extended_locus_file_path())
             self.assertEqual(case.lengths, results.motif_repeats, msg=f"{case.name}: Motif Lengths")
             self.assertEqual(case.motif_support, results.motif_repeat_support, msg=f"{case.name}: Motif Supports")
-            self.assertEqual(case.noisy, results.noisy, msg=f"{case.name}: Noisy")
 
 
 

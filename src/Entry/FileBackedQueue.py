@@ -1,8 +1,31 @@
 import sys, os, time, random
 
 
+TMP_FILE_PREFIX = ".msmutect_tmp_file_"
+RUN_ID_ENV_VAR = "MSMUTECT_RUN_ID"
+
+
+# Process-local random run id, used when the environment doesn't provide one
+# (standalone use of FileBackedQueue). Generated once so every temp file from this
+# process shares it and can be cleaned up together, and random rather than pid-based
+# so it stays unique even across pid reuse.
+_FALLBACK_RUN_ID = f"{os.getpid()}_{random.randint(0, 2 ** 31)}"
+
+
+def get_run_id() -> str:
+    # Stable per-run token set by the parent process before any workers fork
+    # (see main.run_msmutect). Forked/spawned workers inherit it through the
+    # environment, so every temp file produced by one run shares the same run id
+    # and can be cleaned up precisely. Falls back to a process-local random id
+    # when unset.
+    return os.environ.get(RUN_ID_ENV_VAR) or _FALLBACK_RUN_ID
+
+
 def get_unique_filename():
-    return (f".msmutect_tmp_file_{os.getpid()}_{time.time()}_{random.randint(1, os.getpid()*4)}") # while not provably random, this is good enough for now
+    # run id (shared, for scoped cleanup) + timestamp + a random suffix. The random
+    # component makes the name unique independent of the pid, so concurrent runs
+    # sharing an output directory never collide.
+    return f"{TMP_FILE_PREFIX}{get_run_id()}_{time.time()}_{random.randint(0, 2 ** 31)}"
 
 
 class FileBackedQueue:

@@ -4,9 +4,7 @@ Indel, Allele and Mutation caller, specifically designed to call mutations in mi
 There are 3 possible ways to use MSMuTect: docker container, binary executable, and bash script. The docker container and bash script are around 15% faster than the executable. 
 
 ## Binary
-NOTE: The 4.1 version binary is not available on github yet. It is available on google drive:
-https://drive.google.com/file/d/11a7EwXuZp-dKR6O7e09a6V5UB7Lq_g6K/view?usp=drive_link   
-When the bleeding branch moves to main, we will upload the 4.1 binary to github
+NOTE: The 4.1 version binary is not available on github yet. When the bleeding branch moves to main, we will upload the 4.1 binary to github
 
 There is a prebuilt x86_64 linux binary available in releases.  
 Note: The binary is slightly slower than the 'Local' option.   
@@ -49,15 +47,19 @@ is much more accurate for longer motif repeats. Both have executable binaries av
 We strongly recommend using one of the precompiled locus files we have available.
 For HG38, the following loci file is best: https://drive.google.com/file/d/1IiWVp1uPz00Daax8z4bP-XI2v_DQPGk7/view?usp=sharing
 For HG19, the following loci file is best: https://drive.google.com/file/d/1P9W6VBcpc1bfVXXTiyx9EldK2mbdGiv5/view?usp=sharing
+The HG38 file has an additional field the HG19 file lacks. This field contains information about the allele distribution
+in humans and helps improve MSMuTect's specificity.
 For other genome builds, please email us.
-They can be subsampled as desired as long as the order is maintained
+The files can be subsampled as desired as long as the order is maintained
 
-If want to use your own locus file, there are a couple of steps you must do:
+We discourage making your own loci file because it will lack the field the HG19 field lacks. If you are determined to do
+so regardless, there are a couple of steps you must do:
 1. First, the loci file must be sorted properly. This should work on all unix systems:   
 sort -t $'\t' -k1,1 -k5n,5 -k4nr,4 -V [original loci file] > [new loci file]    
 2. If using version>=4.1, you must also correct the loci file so that the motif is written as it
-appears on the forward strand. You can do this with ./tests/scratch/post_process_loci_file.py 
+appears on the forward strand. You can do this with ./tests/testing_utils/post_process_loci_file.py 
 (change the paths as needed)
+
 
 ## Running the Software
 

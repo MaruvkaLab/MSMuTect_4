@@ -22,13 +22,17 @@ def cdf_test(first_allele_reads: int, second_allele_reads: int, p_equal: float =
     else:
         return MutationCall.MUTATION
 
-def proper_normal_alleles_reads_distribution(normal_alleles: AlleleSet, required_level_of_read_support: int = 10):
+def proper_normal_alleles_reads_distribution(normal_alleles: AlleleSet):
+    if normal_alleles.histogram.locus.known_germline_variant:
+        required_level_of_read_support = 16
+    else:
+        required_level_of_read_support = 9
     # 90% of normal reads must map to the first 2 repeat lengths and 10 total reads are required
     read_supports = list(normal_alleles.histogram.rounded_repeat_lengths.values())
     read_supports_sorted = list(sorted(read_supports, reverse=True))
     total_reads = sum(read_supports_sorted)
     first_2_alleles_support = sum(read_supports_sorted[:2])
-    ret = (first_2_alleles_support/total_reads >= 0.9) and (total_reads>=required_level_of_read_support)
+    ret = (total_reads>=required_level_of_read_support) and (first_2_alleles_support/total_reads >= 0.9)
     return ret
 
 
@@ -163,5 +167,7 @@ def call_mutations(normal_alleles: AlleleSet, tumor_alleles: AlleleSet, noise_ta
         return MutationCall(MutationCall.NO_ALLELES, normal_alleles, tumor_alleles, AICs())
     elif equivalent_arrays(normal_alleles.repeat_lengths, tumor_alleles.repeat_lengths):
         return MutationCall(MutationCall.NOT_MUTATION, normal_alleles, tumor_alleles, AICs())
+    elif len(normal_alleles.repeat_lengths) > len(tumor_alleles.repeat_lengths):
+        return MutationCall(MutationCall.TOO_MANY_ALLELES, normal_alleles, tumor_alleles, AICs())
     else:
         return call_decision(normal_alleles, tumor_alleles, noise_table)

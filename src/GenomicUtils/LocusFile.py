@@ -1,8 +1,28 @@
 # cython: language_level=3
 import csv
+import sys
 from typing import List
 
 from src.IndelCalling.Locus import Locus
+
+# 0-indexed column holding the HETEROGENEOUS/HOMOGENEOUS germline-variant annotation
+GERMLINE_VARIANT_COL = 16
+HETEROGENEOUS = "HETEROGENEOUS"
+
+_warned_missing_germline = False
+
+
+def parse_germline_variant(fields: List[str]) -> bool:
+    # HETEROGENEOUS -> known germline variant; HOMOGENEOUS (or anything else) -> not.
+    # If the column is absent, default to False and warn once.
+    global _warned_missing_germline
+    if len(fields) > GERMLINE_VARIANT_COL:
+        return fields[GERMLINE_VARIANT_COL].strip() == HETEROGENEOUS
+    if not _warned_missing_germline:
+        print("WARNING: loci file has no germline-variant (HETEROGENEOUS/HOMOGENEOUS) column; "
+              "defaulting known_germline_variant to False for all loci", file=sys.stderr)
+        _warned_missing_germline = True
+    return False
 
 
 class LociManager:
@@ -23,7 +43,8 @@ class LociManager:
             except StopIteration:  # iterator is exhausted
                 return loci
             loci.append(Locus(chromosome=locus[0], start=int(locus[3]), end=int(locus[4]), pattern=locus[12],
-                          repeats=float(locus[6]), sequence=locus[13]))
+                          repeats=float(locus[6]), sequence=locus[13],
+                          known_germline_variant=parse_germline_variant(locus)))
 
 
         return loci
