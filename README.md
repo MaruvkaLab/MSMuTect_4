@@ -44,6 +44,7 @@ is much more accurate for longer motif repeats. Both have executable binaries av
 
 # Usage
 ## Locus File
+It is almost certain that loci files used with previous versions of MSMuTect will *NOT* work here
 We strongly recommend using one of the precompiled locus files we have available.
 For HG38, the following loci file is best: https://drive.google.com/file/d/1IiWVp1uPz00Daax8z4bP-XI2v_DQPGk7/view?usp=sharing
 For HG19, the following loci file is best: https://drive.google.com/file/d/1P9W6VBcpc1bfVXXTiyx9EldK2mbdGiv5/view?usp=sharing
