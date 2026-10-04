@@ -1,5 +1,7 @@
 # MSMuTect
-Indel, Allele and Mutation caller, specifically designed to call mutations in microsatellite regions using a pair of sequencing files (normal and tumor samples). It can also be adapted for germline MSI analysis
+Indel, Allele and Mutation caller, specifically designed to call mutations in microsatellite regions using a pair of sequencing files (normal and tumor samples). It can also be adapted for germline MSI analysis  
+*Very important note for existing users*: beginning from version 4.1, your loci file must fit very specific parameters, so many loci files that were usable for previous versions of MSMuTect will not work.  
+See the [Locus File](#locus-file) section for more details. 
 # Installation
 There are 3 possible ways to use MSMuTect: docker container, binary executable, and bash script. The docker container and bash script are around 15% faster than the executable. 
 
@@ -45,7 +47,7 @@ is much more accurate for longer motif repeats. Both have executable binaries av
 # Usage
 ## Locus File
 It is almost certain that loci files used with previous versions of MSMuTect will *NOT* work here
-We strongly recommend using one of the precompiled locus files we have available.
+We strongly recommend using one of the precompiled locus files we have available. Using a subset of the listed loci file will also work seamlessly
 For HG38, the following loci file is best: https://drive.google.com/file/d/1IiWVp1uPz00Daax8z4bP-XI2v_DQPGk7/view?usp=sharing
 For HG19, the following loci file is best: https://drive.google.com/file/d/1P9W6VBcpc1bfVXXTiyx9EldK2mbdGiv5/view?usp=sharing
 The HG38 file has an additional field the HG19 file lacks. This field contains information about the allele distribution
