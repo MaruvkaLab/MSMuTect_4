@@ -62,6 +62,7 @@ sort -t $'\t' -k1,1 -k5n,5 -k4nr,4 -V [original loci file] > [new loci file]
 2. If using version>=4.1, you must also correct the loci file so that the motif is written as it
 appears on the forward strand. You can do this with ./tests/testing_utils/post_process_loci_file.py 
 (change the paths as needed)
+3. You will still lack the allele distribution field. This will probably hurt the tool's specificity, and MSMuTect will emit a warning about that
 
 
 ## Running the Software
