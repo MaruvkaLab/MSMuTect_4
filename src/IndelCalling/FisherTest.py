@@ -1,7 +1,10 @@
 # cython: language_level=3
 import math, sys
-from collections import defaultdict
 import numpy as np
+from collections import defaultdict
+from typing import Mapping
+from scipy.stats import fisher_exact
+
 
 
 class Fisher:
@@ -54,7 +57,60 @@ class Fisher:
         return p_value
 
 
+def big_divide(numerator: int, denominator: int) -> float:
+    # does division for massive numbers without causing overflow error
+    numerator_log = math.log(numerator)
+    denominator_log = math.log(denominator)
+    return math.exp(numerator_log-denominator_log)
+
+
+def one_sided_fisher_test(first_set: np.array, second_set: np.array):
+    p_value = 1
+    for i in range(first_set.size):
+        p_value *= math.comb(int(first_set[i] + second_set[i]), int(first_set[i]))
+    p_value = big_divide(p_value, math.comb(int(np.sum(first_set) + np.sum(second_set)), int(np.sum(first_set))))
+    return p_value
+
+
+def collapsed_one_sided_fisher_test(tumor_counts: Mapping, normal_counts: Mapping, normal_allele_lengths) -> float:
+    """
+    One-sided Fisher's exact test on histograms collapsed into a 2x2 table.
+
+    Each histogram (repeat length -> read count) is split into reads at the normal
+    alleles and reads at any other length:
+
+                    other lengths    normal-allele lengths
+        tumor            a                    b
+        normal           c                    d
+
+    Null hypothesis: tumor and normal have the same fraction of reads outside the
+    normal alleles. Alternative: the tumor has a larger fraction (odds ratio > 1),
+    i.e. excess reads at new lengths, from insertions or deletions alike.
+
+    Returns the exact one-sided p-value. Returns 1.0 when either sample has no reads.
+    """
+
+    normal_lengths = {int(length) for length in normal_allele_lengths}
+
+    def split(counts: Mapping):
+        at_normal = sum(int(n) for length, n in counts.items() if int(length) in normal_lengths)
+        other = sum(int(n) for length, n in counts.items() if int(length) not in normal_lengths)
+        return other, at_normal
+
+    tumor_other, tumor_at_normal = split(tumor_counts)
+    normal_other, normal_at_normal = split(normal_counts)
+    if tumor_other + tumor_at_normal == 0 or normal_other + normal_at_normal == 0:
+        return 1.0
+
+    table = [[tumor_other, tumor_at_normal],
+             [normal_other, normal_at_normal]]
+    _, p_value = fisher_exact(table, alternative='greater')
+    return float(p_value)
+
+
 if __name__ == '__main__':
+
+    # print(one_sided_fisher_test(a,b))
     f=Fisher()
     a=f.big_divide(10, 3)
     print(a)

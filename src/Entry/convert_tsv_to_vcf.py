@@ -1,6 +1,6 @@
 import shutil
 from typing import List
-from tests.testing_utils.read_results import ResultsReaderMutationFile, ResultsLineMutationFile, LocusMutationCall
+from src.Entry.ResultsReaders import ResultsReaderMutationFile, LocusMutationCall
 
 
 def generate_ref_str_alternatives(reference: str, microsatellite: str, alternative_num_repeats: List[float]):

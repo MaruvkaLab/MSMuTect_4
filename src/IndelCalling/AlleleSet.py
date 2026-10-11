@@ -7,11 +7,11 @@ from src.IndelCalling.Histogram import Histogram
 
 
 class AlleleSet:
-    def __init__(self, histogram: Histogram, log_likelihood: float, repeat_lengths: np.array, frequencies: np.array, min_read_support = -1):
+    def __init__(self, histogram: Histogram, log_likelihood: float, repeat_lengths: np.ndarray, frequencies: np.ndarray, min_read_support = -1):
         self.histogram = histogram
         self.log_likelihood = log_likelihood
-        self.repeat_lengths: np.array = repeat_lengths
-        self.frequencies: np.array = frequencies
+        self.repeat_lengths: np.ndarray = repeat_lengths
+        self.frequencies: np.ndarray = frequencies
         self.min_read_support = min_read_support
 
     def __eq__(self, other):
@@ -19,7 +19,7 @@ class AlleleSet:
 
     @staticmethod
     def header(prefix=''):
-        return f"{prefix}LOG_LIKELIHOOD\t{prefix}ALLELE_1\t{prefix}ALLELES_2\t{prefix}ALLELES_3\t{prefix}ALLELES_4\t{prefix}FRACTION_1\t{prefix}FRACTION_2\t{prefix}FRACTION_3\t{prefix}FRACTION_4"
+        return f"{prefix}LOG_LIKELIHOOD\t{prefix}ALLELE_1\t{prefix}ALLELE_2\t{prefix}ALLELE_3\t{prefix}ALLELE_4\t{prefix}FRACTION_1\t{prefix}FRACTION_2\t{prefix}FRACTION_3\t{prefix}FRACTION_4"
 
     def __len__(self):
         return len(self.repeat_lengths)

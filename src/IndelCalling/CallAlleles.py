@@ -119,6 +119,9 @@ def passes_filter(motif_length: int, repeat_size: float):
 
 
 def calculate_alleles(histogram: Histogram, noise_table: np.array, required_read_support):
+    if len(histogram.repeat_lengths)==0:
+        return AlleleSet(histogram, log_likelihood=-1, repeat_lengths=np.array([]), frequencies=np.array([-1]), min_read_support=required_read_support)
+
     proper_motif_sizes = np.array([repeat_size for repeat_size in histogram.rounded_repeat_lengths if
                                          passes_filter(len(histogram.locus.pattern), repeat_size)])
     supported_proper_motifs = np.array([length for length in proper_motif_sizes

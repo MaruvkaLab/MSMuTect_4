@@ -1,7 +1,10 @@
 import numpy as np
+from collections import namedtuple
 from typing import Tuple, List
-from src.IndelCalling.ComparedSets import ComparedSets
 from src.IndelCalling.Histogram import Histogram
+
+
+ComparedSets = namedtuple("ComparedSets", ['first_set', 'second_set'])
 
 
 def hist2vecs(histogram_a: Histogram, histogram_b: Histogram) -> ComparedSets:

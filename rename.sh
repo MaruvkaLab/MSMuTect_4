@@ -12,9 +12,3 @@ mv src/GenomicUtils/LocusFile.py src/GenomicUtils/LocusFile.pyx
 
 mv src/Entry/SingleFileBatches.py src/Entry/SingleFileBatches.pyx
 mv src/Entry/PairFileBatches.py src/Entry/PairFileBatches.pyx
-
-
-
-
-find . -name "*.so" -type f -delete
-find . -name "*.c" -type f -delete
