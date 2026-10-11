@@ -3,33 +3,47 @@ Indel, Allele and Mutation caller, specifically designed to call mutations in mi
 *Very important note for existing users*: beginning from version 4.1, your loci file must fit very specific parameters, so many loci files that were usable for previous versions of MSMuTect will not work.  
 See the [Locus File](#locus-file) section for more details. 
 # Installation
-There are 3 possible ways to use MSMuTect: docker container, binary executable, and bash script. The docker container and bash script are around 15% faster than the executable. 
+There are 3 possible ways to use MSMuTect: docker container, binary executable, and bash script. 
 
 ## Binary
-NOTE: The 4.1 version binary is not available on github yet. When the bleeding branch moves to main, we will upload the 4.1 binary to github
-
 There is a prebuilt x86_64 linux binary available in releases.  
-Note: The binary is slightly slower than the 'Local' option.   
-Download the binary from the following link:
-[fill in link]
+Please use the latest version for the best results.
 
 ## Docker
-To build:   
-docker build -t msmutect-docker .   
-To run:  
-docker run --rm -it msmutect-docker [flags]  
+To build:
+```bash
+docker build -t msmutect-docker .
+```
+To run:
+```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v /path/to/inputs:/inputs:ro -v /path/to/output:/output \
+  msmutect-docker [flags]
+```
+
 It is necessary to mount the directories of the input and output files so the msmutect docker can access them. 
-Here is an example:  
-docker run -v /home/avraham/locus_file/:/locus_file -v /home/avraham/data/:/bam_files -v .:/output --rm -it msmutect-docker -l /locus_file/GRCh38.d1.vd1_1to15_repetitive_loci_sorted_fixed -T /bam_files/tumor.bam -N /bam_files/normal.bam -O /output/docker_test -c 64 -m -A -H
+Here is an example:
+```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v /home/avraham/locus_file/:/locus_file:ro \
+  -v /home/avraham/data/:/bam_files:ro \
+  -v "$PWD":/output \
+  msmutect-docker \
+  -l /locus_file/GRCh38.d1.vd1_1to15_repetitive_loci_sorted_fixed \
+  -T /bam_files/tumor.bam -N /bam_files/normal.bam \
+  -O /output/docker_test -c 64 -m -A -H
+```
 
 
 
 ## Bash Script
-If on a different platform, or to achieve maximum performance (~15% faster than the binary), do the following:  
-git clone https://github.com/MaruvkaLab/MSMuTect_4  
-cd MSMuTect_4  
-pip3 install -r requirements.txt  
-bash build_cython.sh  #optional; improves performance. Otherwise, this is the slowest option
+The simplest way to start:
+```bash
+git clone https://github.com/MaruvkaLab/MSMuTect_4
+cd MSMuTect_4
+pip3 install -r requirements.txt
+bash build_cython.sh  #optional; improves performance a few percentage points
+```
 When running, use MSMuTect_4/msmutect.sh everywhere the documentation says 'msmutect'
 
 ### Windows Users
@@ -39,26 +53,23 @@ considered as mature and stable as pysam. Windows users can use WSL to run
 MSMuTect, although this will incur a significant performance hit if the files are
 under C:/ (/mnt/c) due to WSL's translation layer
 
-# A Note About Versions
-The versions are very confused due to a discontinuous history of development. Practically speaking
-you should use either version 4.0 (which is fastest) or version (4.1) which is ~2x slower but 
-is much more accurate for longer motif repeats. Both have executable binaries available on the github
 
 # Usage
 ## Locus File
 It is almost certain that loci files used with previous versions of MSMuTect will *NOT* work here
-We strongly recommend using one of the precompiled locus files we have available. Using a subset of the listed loci file will also work seamlessly
-For HG38, the following loci file is best: https://drive.google.com/file/d/1IiWVp1uPz00Daax8z4bP-XI2v_DQPGk7/view?usp=sharing
-For HG19, the following loci file is best: https://drive.google.com/file/d/1P9W6VBcpc1bfVXXTiyx9EldK2mbdGiv5/view?usp=sharing
+We strongly recommend using one of the precompiled locus files we have available. Using a subset of one of the listed loci files will also work seamlessly.
+For HG38, the following loci file is best: https://drive.google.com/file/d/1IiWVp1uPz00Daax8z4bP-XI2v_DQPGk7/view?usp=sharing  
+For HG19, the following loci file is best: https://drive.google.com/file/d/1P9W6VBcpc1bfVXXTiyx9EldK2mbdGiv5/view?usp=sharing  
 The HG38 file has an additional field the HG19 file lacks. This field contains information about the allele distribution
 in humans and helps improve MSMuTect's specificity.
 For other genome builds, please email us.
-The files can be subsampled as desired as long as the order is maintained
 
-We discourage making your own loci file because it will lack the field the HG19 field lacks. If you are determined to do
+We discourage making your own loci file because it will also lack the field the HG19 file lacks. If you are determined to do
 so regardless, there are a couple of steps you must do:
-1. First, the loci file must be sorted properly. This should work on all unix systems:   
-sort -t $'\t' -k1,1 -k5n,5 -k4nr,4 -V [original loci file] > [new loci file]    
+1. First, the loci file must be sorted properly. This should work on all unix systems:
+   ```bash
+   sort -t $'\t' -k1,1 -k5n,5 -k4nr,4 -V [original loci file] > [new loci file]
+   ```
 2. If using version>=4.1, you must also correct the loci file so that the motif is written as it
 appears on the forward strand. You can do this with ./tests/testing_utils/post_process_loci_file.py 
 (change the paths as needed)
@@ -67,28 +78,46 @@ appears on the forward strand. You can do this with ./tests/testing_utils/post_p
 
 ## Running the Software
 
+```bash
 msmutect [flags]
+```
 You can also run MSMuTect on CRAM files. To do so, you must also supply the --reference_genome_file flag
-  
-To fully analyze all loci:  
-msmutect -T [tumor_bam.bam] -N [normalbam.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -m -A -H  
 
-To find mutations in the most efficient runtime possible:  
-msmutect -T [tumor_bam.bam] -N [normalbam.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -m  
+To fully analyze all loci:
+```bash
+msmutect -T [tumor_bam.bam] -N [normalbam.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -m -A -H
+```
 
-To call indels and alleles for an individual file:  
-msmutect -S [sequence_file.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -A -H  
+To find mutations in the most efficient runtime possible:
+```bash
+msmutect -T [tumor_bam.bam] -N [normalbam.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -m
+```
 
-To call indels but not alleles for an individual file:  
-msmutect -S [sequence_file.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -H  
+To call indels and alleles for an individual file:
+```bash
+msmutect -S [sequence_file.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -A -H
+```
+
+To call indels but not alleles for an individual file:
+```bash
+msmutect -S [sequence_file.bam] -l [loci_file.phobos] -O [output_prefix] -c [number of cores to use] -H
+```
 
 To call mutations using results from previously called indels (can only use a single core):
-msmutect --from_file -l [loci_file.phobos]  -N [normal.hist.tsv] -T [tumor.hist.tsv]  -O [output_prefix] -m -A 
+```bash
+msmutect --from_file -N [normal.hist.tsv] -T [tumor.hist.tsv]  -O [output_prefix] -m -A
+```
 
 To see all flags, such as changing parameters, outputting vcf files, etc., run 'msmutect --help'
 
-MSMuTect will create temporary files when running, with names like .msmutect_tmp_file_10242_1721809243.1243694_25529.  
-It deletes them at the end. If, for some reason, msmutect is interrupted, these files will not be deleted. They can be safely removed 
+MSMuTect will create temporary files when running, with names like .msmutect_tmp_file_184260_417968458_1791733248.1329718_1793407325  
+It deletes them at the end. If, for some reason, msmutect is interrupted, these files are sometimes not deleted. They can be safely removed 
+
+## Output files
+MSMuTect, when run end to end, will generate 3 files
+1. A [prefix].full.call_counts.tsv  - this holds a summary of the calls MSMuTect made about the given loci for the input files
+2. A [prefix].full.mut.tsv file - this holds the algorithmic calls MSMuTect made about every single locus in the loci file for the input files
+3. A [prefix].full.mutated_only.mut.tsv - this holds only the loci that were called mutated in the input file
 
 ### Understanding the 'Call' Column
 M = Mutation  
@@ -126,5 +155,6 @@ If for some reason you would like to compile a binary executable, this is a litt
 Specifically, pyinstaller can be picky regarding the exact python and system libraries present on the system
 
 The steps to create the binary executable are as follows:   
-1. Create a python virtual environment with all of the dependencies in requirements.txt and pyinstaller
-2. Run create_executable.sh
+1. Create a python virtual environment with all of the dependencies in requirements.txt and pyinstaller. To keep the executable
+a manageable size, make the virtual environment as minimal as possible
+2. Run build_executable.sh
