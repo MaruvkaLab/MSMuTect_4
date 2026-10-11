@@ -13,7 +13,7 @@ setup(
     license='MIT',
     author='Avraham Kahan, Yossi Maruvka, and the Maruvka Lab at Technion',
     author_email='yosi.maruvka@bfe.technion.ac.il',
-    description='Tool to determine microsatellite in/stability in Tumors from DNA sequencing',
+    description='Tool to determine microsatellite in/stability in Tumors from whole genome sequencing',
     long_description=f"{pathlib.Path(__file__).parent}/README.md",
     long_description_content_type="text/markdown",
     install_requires=['typing>=3.7.4.3',

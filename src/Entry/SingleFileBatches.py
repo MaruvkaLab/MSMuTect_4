@@ -20,7 +20,7 @@ def format_alleles(alleles: AlleleSet) -> str: # List[AlleleSet] not declared to
     return f"{alleles.histogram.locus}\t{str(alleles.histogram)}\t{str(alleles)}"
 
 
-def run_single_allelic(BAM: str, reference_genome_file: str, loci_file: str, batch_start: int,
+def run_single_allelic(BAM: str, reference_genome_file: Optional[str], loci_file: str, batch_start: int,
                        batch_end: int, cores: int, flanking: int, required_reads: int, imprecise_mode, output_prefix: str) -> None:
     loci_iterator = LociManager(loci_file, batch_start)
     noise_table = get_noise_table()
@@ -30,7 +30,7 @@ def run_single_allelic(BAM: str, reference_genome_file: str, loci_file: str, bat
     BatchUtil.write_queues_results(output_prefix + ".all", results, header)
 
 
-def partial_single_allelic(loci: List[Locus], BAM: str, reference_genome_file: str, flanking: int, noise_table,
+def partial_single_allelic(loci: List[Locus], BAM: str, reference_genome_file: Optional[str], flanking: int, noise_table,
                            required_reads: int, imprecise_mode: bool, results_dir: str) -> FileBackedQueue:
     allelic_results = FileBackedQueue(out_file_dir=results_dir, max_memory=10**7) # 10MB
     if len(loci) != 0:
@@ -45,7 +45,7 @@ def partial_single_allelic(loci: List[Locus], BAM: str, reference_genome_file: s
     return allelic_results
 
 
-def run_single_histogram(BAM: str, reference_genome_file: str, loci_file: str, batch_start: int,
+def run_single_histogram(BAM: str, reference_genome_file: Optional[str], loci_file: str, batch_start: int,
                          batch_end: int, cores: int, flanking: int, imprecise_mode: bool, output_prefix: str) -> None:
     loci_iterator = LociManager(loci_file, batch_start)
     results = BatchUtil.run_batch(partial_single_histogram, [BAM, reference_genome_file, flanking, imprecise_mode], loci_iterator,
@@ -58,7 +58,7 @@ def format_histogram(histogram: Histogram) -> str:
     return f"{str(histogram.locus)}\t{str(histogram)}"
 
 
-def partial_single_histogram(loci: List[Locus], BAM: str, reference_genome_file: str, flanking: int,
+def partial_single_histogram(loci: List[Locus], BAM: str, reference_genome_file: Optional[str], flanking: int,
                              imprecise_mode: bool, results_dir: str) -> FileBackedQueue:
     histograms = FileBackedQueue(out_file_dir=results_dir, max_memory=10**7)  # 10MB
     if len(loci) != 0:

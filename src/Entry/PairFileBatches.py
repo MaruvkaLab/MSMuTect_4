@@ -1,6 +1,6 @@
 # cython: language_level=3
 import os
-from typing import List
+from typing import List, Optional
 from collections import namedtuple, defaultdict
 
 from src.IndelCalling.Locus import Locus
@@ -30,7 +30,7 @@ def format_mutation_call(decision: MutationCall):
     return f"{str(decision.normal_alleles.histogram.locus)}\t{str(decision.normal_alleles.histogram)}\t{str(decision.normal_alleles)}\t{str(decision.tumor_alleles.histogram)}\t{str(decision.tumor_alleles)}\t{str(decision)}"
 
 
-def run_full_pair(normal: str, tumor: str, reference_genome_file: str, loci_file: str, batch_start: int,
+def run_full_pair(normal: str, tumor: str, reference_genome_file: Optional[str], loci_file: str, batch_start: int,
                        batch_end: int, cores: int, flanking: int, required_reads: int, imprecise_mode: bool,
                   output_prefix: str) -> str:
     # returns path of output file
@@ -53,7 +53,7 @@ def get_alleles(locus: Locus, reads_fetcher: ReadsFetcher, flanking: int, noise_
     return alleles
 
 
-def partial_full_pair(loci: List[Locus], normal: str, tumor: str, reference_genome_file: str, flanking: int,
+def partial_full_pair(loci: List[Locus], normal: str, tumor: str, reference_genome_file: Optional[str], flanking: int,
                       noise_table, required_reads: int, imprecise_mode: bool,
                       results_dir: str) -> FileBackedQueue:
     calls = FileBackedQueue(out_file_dir=results_dir, max_memory=10**7)  # 10MB
@@ -68,7 +68,7 @@ def partial_full_pair(loci: List[Locus], normal: str, tumor: str, reference_geno
     return calls
 
 
-def run_mutations_pair(normal: str, tumor: str, reference_genome_file: str, loci_file: str, batch_start: int,
+def run_mutations_pair(normal: str, tumor: str, reference_genome_file: Optional[str], loci_file: str, batch_start: int,
                        batch_end: int, cores: int, flanking: int, required_reads: int, imprecise_mode: bool,
                        output_prefix: str):
     # returns output file
@@ -92,7 +92,7 @@ def get_tumor_alleles(reads_fetcher: ReadsFetcher, locus: Locus, flanking: int, 
     return current_alleles
 
 
-def partial_mutations_pair(loci: List[Locus], normal: str, tumor: str, reference_genome_file: str, flanking: int,
+def partial_mutations_pair(loci: List[Locus], normal: str, tumor: str, reference_genome_file: Optional[str], flanking: int,
                            noise_table, required_reads: int, imprecise_mode: bool, results_dir: str) -> FileBackedQueue:
     calls = FileBackedQueue(out_file_dir=results_dir, max_memory=10**7) # 10MB
     if len(loci) != 0:

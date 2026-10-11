@@ -2,6 +2,7 @@
 import math, sys
 import numpy as np
 from collections import defaultdict
+from typing import Mapping
 from scipy.stats import fisher_exact
 
 
@@ -71,7 +72,7 @@ def one_sided_fisher_test(first_set: np.array, second_set: np.array):
     return p_value
 
 
-def collapsed_one_sided_fisher_test(tumor_counts: dict, normal_counts: dict, normal_allele_lengths) -> float:
+def collapsed_one_sided_fisher_test(tumor_counts: Mapping, normal_counts: Mapping, normal_allele_lengths) -> float:
     """
     One-sided Fisher's exact test on histograms collapsed into a 2x2 table.
 
@@ -91,7 +92,7 @@ def collapsed_one_sided_fisher_test(tumor_counts: dict, normal_counts: dict, nor
 
     normal_lengths = {int(length) for length in normal_allele_lengths}
 
-    def split(counts: dict):
+    def split(counts: Mapping):
         at_normal = sum(int(n) for length, n in counts.items() if int(length) in normal_lengths)
         other = sum(int(n) for length, n in counts.items() if int(length) not in normal_lengths)
         return other, at_normal
